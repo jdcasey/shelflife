@@ -11,4 +11,10 @@
   <artifactId>shelflife-store-couch</artifactId>
   <name>Shelf-Life :: CouchDB Store</name>
 
+  <dependencies>
+    <dependency>
+      <groupId>org.commonjava.couch</groupId>
+      <artifactId>couch-app-support</artifactId>
+    </dependency>
+  </dependencies>
 </project>

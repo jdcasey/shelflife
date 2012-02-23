@@ -1,5 +1,9 @@
 package org.commonjava.shelflife.expire;
 
+import static org.commonjava.shelflife.expire.ExpirationEventType.CANCEL;
+import static org.commonjava.shelflife.expire.ExpirationEventType.SCHEDULE;
+import static org.commonjava.shelflife.expire.ExpirationEventType.EXPIRE;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -36,6 +40,7 @@ public class MemoryExpirationManager
     {
         expirations.add( expiration );
         timer.schedule( new ExpirationTask( expiration ), expiration.getExpires() - System.currentTimeMillis() );
+        eventQueue.fire( new ExpirationEvent( expiration, SCHEDULE ) );
     }
 
     @Override
@@ -47,6 +52,7 @@ public class MemoryExpirationManager
             if ( expiration.isActive() && expirations.contains( expiration ) )
             {
                 cancelInternal( expiration );
+                eventQueue.fire( new ExpirationEvent( expiration, CANCEL ) );
             }
         }
     }
@@ -65,7 +71,7 @@ public class MemoryExpirationManager
         {
             if ( expiration.isActive() && expirations.contains( expiration ) )
             {
-                final ExpirationEvent event = new ExpirationEvent( expiration );
+                final ExpirationEvent event = new ExpirationEvent( expiration, EXPIRE );
                 eventQueue.fire( event );
 
                 cancelInternal( expiration );
@@ -165,7 +171,7 @@ public class MemoryExpirationManager
     }
 
     @Override
-    public void _loadFromStorage( final Collection<Expiration> expirations )
+    public void loadedFromStorage( final Collection<Expiration> expirations )
         throws ExpirationManagerException
     {
         for ( final Expiration expiration : expirations )

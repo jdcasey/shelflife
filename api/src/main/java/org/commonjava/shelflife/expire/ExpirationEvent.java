@@ -7,9 +7,17 @@ public class ExpirationEvent
 
     private final Expiration expiration;
 
-    public ExpirationEvent( final Expiration exp )
+    private final ExpirationEventType type;
+
+    public ExpirationEvent( final Expiration exp, final ExpirationEventType type )
     {
         this.expiration = exp;
+        this.type = type;
+    }
+
+    public ExpirationEventType getType()
+    {
+        return type;
     }
 
     public Expiration getExpiration()

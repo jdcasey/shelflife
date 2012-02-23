@@ -20,12 +20,12 @@ public class TestExpirationListener
         notify();
     }
 
-    public synchronized List<ExpirationEvent> waitForEvents( final long timeout )
+    public synchronized List<ExpirationEvent> waitForEvents( final int count, final long timeout )
         throws InterruptedException
     {
         final long start = System.currentTimeMillis();
 
-        while ( events.isEmpty() && ( System.currentTimeMillis() - start < timeout ) )
+        while ( ( events.size() < count ) && ( System.currentTimeMillis() - start < timeout ) )
         {
             wait( 500 );
         }

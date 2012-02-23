@@ -29,7 +29,7 @@ public interface ExpirationManager
     void cancelAll( ExpirationMatcher matcher )
         throws ExpirationManagerException;
 
-    void _loadFromStorage( Collection<Expiration> expirations )
+    void loadedFromStorage( Collection<Expiration> expirations )
         throws ExpirationManagerException;
 
 }
