@@ -1,11 +1,12 @@
 package org.commonjava.shelflife.expire;
 
 import static org.commonjava.shelflife.expire.ExpirationEventType.CANCEL;
-import static org.commonjava.shelflife.expire.ExpirationEventType.SCHEDULE;
 import static org.commonjava.shelflife.expire.ExpirationEventType.EXPIRE;
+import static org.commonjava.shelflife.expire.ExpirationEventType.SCHEDULE;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -40,6 +41,7 @@ public class MemoryExpirationManager
     {
         expirations.add( expiration );
         timer.schedule( new ExpirationTask( expiration ), expiration.getExpires() - System.currentTimeMillis() );
+        logger.info( "[SCHEDULED] %s, expires: %s", expiration.getKey(), new Date( expiration.getExpires() ) );
         eventQueue.fire( new ExpirationEvent( expiration, SCHEDULE ) );
     }
 
@@ -52,6 +54,7 @@ public class MemoryExpirationManager
             if ( expiration.isActive() && expirations.contains( expiration ) )
             {
                 cancelInternal( expiration );
+                logger.info( "[CANCELED] %s", expiration.getKey(), new Date( expiration.getExpires() ) );
                 eventQueue.fire( new ExpirationEvent( expiration, CANCEL ) );
             }
         }
@@ -71,10 +74,9 @@ public class MemoryExpirationManager
         {
             if ( expiration.isActive() && expirations.contains( expiration ) )
             {
-                final ExpirationEvent event = new ExpirationEvent( expiration, EXPIRE );
-                eventQueue.fire( event );
-
                 cancelInternal( expiration );
+                logger.info( "[TRIGGERED] %s", expiration.getKey(), new Date( expiration.getExpires() ) );
+                eventQueue.fire( new ExpirationEvent( expiration, EXPIRE ) );
             }
         }
     }
@@ -177,7 +179,14 @@ public class MemoryExpirationManager
         for ( final Expiration expiration : expirations )
         {
             expirations.add( expiration );
-            timer.schedule( new ExpirationTask( expiration ), expiration.getExpires() - System.currentTimeMillis() );
+            if ( expiration.getExpires() <= System.currentTimeMillis() )
+            {
+                trigger( expiration );
+            }
+            else
+            {
+                timer.schedule( new ExpirationTask( expiration ), expiration.getExpires() - System.currentTimeMillis() );
+            }
         }
     }
 

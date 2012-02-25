@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.commonjava.shelflife.store.couch;
+package org.commonjava.shelflife.inject;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -26,10 +26,13 @@ import java.lang.annotation.Target;
 
 import javax.inject.Qualifier;
 
+/**
+ * Simple marker interface for use with CDI components.
+ */
 @Qualifier
 @Retention( RetentionPolicy.RUNTIME )
 @Target( { METHOD, FIELD, PARAMETER, TYPE } )
-public @interface ShelflifeStore
+public @interface Shelflife
 {
 
 }

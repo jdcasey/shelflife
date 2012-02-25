@@ -16,5 +16,13 @@
       <groupId>org.commonjava.couch</groupId>
       <artifactId>couch-app-support</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.jboss.weld.se</groupId>
+      <artifactId>weld-se-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.spec.javax.servlet</groupId>
+      <artifactId>jboss-servlet-api_3.0_spec</artifactId>
+    </dependency>
   </dependencies>
 </project>

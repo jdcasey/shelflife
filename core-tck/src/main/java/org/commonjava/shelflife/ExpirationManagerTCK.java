@@ -9,10 +9,9 @@ import java.util.List;
 import org.commonjava.shelflife.expire.ExpirationEvent;
 import org.commonjava.shelflife.expire.ExpirationEventType;
 import org.commonjava.shelflife.expire.ExpirationManager;
-import org.commonjava.shelflife.expire.ExpirationManagerException;
-import org.commonjava.shelflife.fixture.TestExpiration;
 import org.commonjava.shelflife.fixture.TestExpirationListener;
 import org.commonjava.shelflife.model.Expiration;
+import org.commonjava.shelflife.model.ExpirationKey;
 import org.junit.Test;
 
 public abstract class ExpirationManagerTCK
@@ -22,26 +21,49 @@ public abstract class ExpirationManagerTCK
 
     protected abstract TestExpirationListener getListener();
 
+    protected long getEventTimeout()
+    {
+        return 600;
+    }
+
+    protected void assertExpirationTriggered( final Expiration ex )
+        throws Exception
+    {
+    }
+
+    protected void assertExpirationCanceled( final Expiration ex )
+        throws Exception
+    {
+    }
+
+    protected void assertExpirationScheduled( final Expiration ex )
+        throws Exception
+    {
+    }
+
     @Test
     public void scheduleOneAndWaitForExpiration()
-        throws ExpirationManagerException, InterruptedException
+        throws Exception
     {
-        final TestExpiration ex = new TestExpiration( "one", 500 );
+        final Expiration ex = new Expiration( new ExpirationKey( "test", "one" ), 500 );
         getManager().schedule( ex );
+        assertExpirationScheduled( ex );
 
         Thread.sleep( 600 );
 
         assertThat( ex.isActive(), equalTo( false ) );
+        assertExpirationTriggered( ex );
     }
 
     @Test
     public void scheduleOneAndWaitForExpirationEvent()
-        throws ExpirationManagerException, InterruptedException
+        throws Exception
     {
-        final Expiration ex = new TestExpiration( "one", 500 );
+        final Expiration ex = new Expiration( new ExpirationKey( "test", "one" ), 500 );
         getManager().schedule( ex );
+        assertExpirationScheduled( ex );
 
-        final List<ExpirationEvent> events = getListener().waitForEvents( 2, 600 );
+        final List<ExpirationEvent> events = getListener().waitForEvents( 2, getEventTimeout() );
 
         assertThat( ex.isActive(), equalTo( false ) );
         assertThat( events, notNullValue() );
@@ -62,14 +84,17 @@ public abstract class ExpirationManagerTCK
         assertThat( event.getExpiration(), equalTo( ex ) );
         assertThat( event.getExpiration()
                          .getKey(), equalTo( ex.getKey() ) );
+
+        assertExpirationTriggered( ex );
     }
 
     @Test
     public void scheduleOneAndCancelBeforeExpiration()
-        throws ExpirationManagerException, InterruptedException
+        throws Exception
     {
-        final TestExpiration ex = new TestExpiration( "one", 500 );
+        final Expiration ex = new Expiration( new ExpirationKey( "test", "one" ), 500 );
         getManager().schedule( ex );
+        assertExpirationScheduled( ex );
         final long start = System.currentTimeMillis();
 
         getManager().cancel( ex );
@@ -78,21 +103,24 @@ public abstract class ExpirationManagerTCK
 
         assertThat( ex.isActive(), equalTo( false ) );
         assertThat( stop - start < 500, equalTo( true ) );
+
+        assertExpirationCanceled( ex );
     }
 
     @Test
     public void scheduleOneCancelAndVerifyNoExpirationEvent()
-        throws ExpirationManagerException, InterruptedException
+        throws Exception
     {
-        final Expiration ex = new TestExpiration( "one", 500 );
+        final Expiration ex = new Expiration( new ExpirationKey( "test", "one" ), 500 );
         getManager().schedule( ex );
+        assertExpirationScheduled( ex );
         final long start = System.currentTimeMillis();
 
         getManager().cancel( ex );
 
         final long stop = System.currentTimeMillis();
 
-        final List<ExpirationEvent> events = getListener().waitForEvents( 2, 600 );
+        final List<ExpirationEvent> events = getListener().waitForEvents( 2, getEventTimeout() );
 
         assertThat( ex.isActive(), equalTo( false ) );
         assertThat( stop - start < 500, equalTo( true ) );
@@ -112,6 +140,8 @@ public abstract class ExpirationManagerTCK
         assertThat( event.getExpiration(), equalTo( ex ) );
         assertThat( event.getExpiration()
                          .getKey(), equalTo( ex.getKey() ) );
+
+        assertExpirationCanceled( ex );
     }
 
 }

@@ -1,18 +1,57 @@
 package org.commonjava.shelflife.model;
 
-import java.util.Map;
-
-public interface Expiration
+public final class Expiration
 {
 
-    ExpirationKey getKey();
+    private final ExpirationKey key;
 
-    long getExpires();
+    private final long expires;
 
-    boolean isActive();
+    private final Object data;
 
-    void deactivate();
+    private transient boolean active = true;
 
-    Map<?, ?> getData();
+    public Expiration( final ExpirationKey key, final long expires, final Object data )
+    {
+        this.key = key;
+        this.expires = expires < System.currentTimeMillis() ? expires + System.currentTimeMillis() : expires;
+        this.data = data;
+    }
+
+    public Expiration( final ExpirationKey key, final long expires )
+    {
+        this( key, expires, null );
+    }
+
+    public ExpirationKey getKey()
+    {
+        return key;
+    }
+
+    public long getExpires()
+    {
+        return expires;
+    }
+
+    public boolean isActive()
+    {
+        return active;
+    }
+
+    public void deactivate()
+    {
+        active = false;
+    }
+
+    public Object getData()
+    {
+        return data;
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.format( "Expiration [key=%s]", key );
+    }
 
 }
