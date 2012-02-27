@@ -89,6 +89,55 @@ public abstract class ExpirationManagerTCK
     }
 
     @Test
+    public void scheduleOneAndTriggerBeforeExpiration()
+        throws Exception
+    {
+        final Expiration ex = new Expiration( new ExpirationKey( "test", "one" ), 50000 );
+        getManager().schedule( ex );
+        assertExpirationScheduled( ex );
+
+        getManager().trigger( ex );
+
+        assertThat( ex.isActive(), equalTo( false ) );
+        assertExpirationTriggered( ex );
+    }
+
+    @Test
+    public void scheduleOneAndTriggerBeforeExpiration_CheckEvent()
+        throws Exception
+    {
+        final Expiration ex = new Expiration( new ExpirationKey( "test", "one" ), 50000 );
+        getManager().schedule( ex );
+        assertExpirationScheduled( ex );
+
+        getManager().trigger( ex );
+
+        final List<ExpirationEvent> events = getListener().waitForEvents( 2, getEventTimeout() );
+
+        assertThat( ex.isActive(), equalTo( false ) );
+        assertThat( events, notNullValue() );
+        assertThat( events.size(), equalTo( 2 ) );
+
+        int idx = 0;
+
+        ExpirationEvent event = events.get( idx );
+        assertThat( event.getType(), equalTo( ExpirationEventType.SCHEDULE ) );
+        assertThat( event.getExpiration(), equalTo( ex ) );
+        assertThat( event.getExpiration()
+                         .getKey(), equalTo( ex.getKey() ) );
+
+        idx++;
+
+        event = events.get( idx );
+        assertThat( event.getType(), equalTo( ExpirationEventType.EXPIRE ) );
+        assertThat( event.getExpiration(), equalTo( ex ) );
+        assertThat( event.getExpiration()
+                         .getKey(), equalTo( ex.getKey() ) );
+
+        assertExpirationTriggered( ex );
+    }
+
+    @Test
     public void scheduleOneAndCancelBeforeExpiration()
         throws Exception
     {
