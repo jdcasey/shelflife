@@ -11,6 +11,8 @@ public final class Expiration
 
     private transient boolean active = true;
 
+    private transient boolean canceled = false;
+
     public Expiration( final ExpirationKey key, final long expires, final Object data )
     {
         this.key = key;
@@ -38,9 +40,20 @@ public final class Expiration
         return active;
     }
 
-    public void deactivate()
+    public boolean isCanceled()
+    {
+        return canceled;
+    }
+
+    public void expire()
     {
         active = false;
+    }
+
+    public void cancel()
+    {
+        active = false;
+        canceled = true;
     }
 
     public Object getData()

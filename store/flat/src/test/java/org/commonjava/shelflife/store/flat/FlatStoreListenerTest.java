@@ -89,7 +89,7 @@ public class FlatStoreListenerTest
 
         System.out.println( "\n\n\nChecking for existence of flat file for: " + ex + "\n\n\n" );
         final File file = storeListener.getFile( ex );
-        assertThat( file.exists(), equalTo( true ) );
+        assertThat( ex + " flat-file storage does not exist!", file.exists(), equalTo( true ) );
     }
 
     @Override

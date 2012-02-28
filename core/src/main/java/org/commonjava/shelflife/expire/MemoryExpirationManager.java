@@ -53,17 +53,12 @@ public class MemoryExpirationManager
         {
             if ( expiration.isActive() && expirations.contains( expiration ) )
             {
-                cancelInternal( expiration );
+                expiration.cancel();
+                expirations.remove( expiration );
                 logger.info( "[CANCELED] %s", expiration.getKey(), new Date( expiration.getExpires() ) );
                 eventQueue.fire( new ExpirationEvent( expiration, CANCEL ) );
             }
         }
-    }
-
-    private void cancelInternal( final Expiration expiration )
-    {
-        expiration.deactivate();
-        expirations.remove( expiration );
     }
 
     @Override
@@ -74,7 +69,8 @@ public class MemoryExpirationManager
         {
             if ( expiration.isActive() && expirations.contains( expiration ) )
             {
-                cancelInternal( expiration );
+                expiration.expire();
+                expirations.remove( expiration );
                 logger.info( "[TRIGGERED] %s", expiration.getKey(), new Date( expiration.getExpires() ) );
                 eventQueue.fire( new ExpirationEvent( expiration, EXPIRE ) );
             }
