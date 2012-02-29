@@ -174,7 +174,7 @@ public class MemoryExpirationManager
     {
         for ( final Expiration expiration : expirations )
         {
-            expirations.add( expiration );
+            this.expirations.add( expiration );
             if ( expiration.getExpires() <= System.currentTimeMillis() )
             {
                 trigger( expiration );
