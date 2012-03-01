@@ -63,7 +63,7 @@ public class FlatStoreListenerTest
     protected void assertExpirationTriggered( final Expiration ex )
         throws Exception
     {
-        storeListener.waitForEvent( 1000, 250 );
+        storeListener.waitForEvents( 1000, 250 );
 
         System.out.println( "\n\n\nChecking for absence of flat file for: " + ex + "\n\n\n" );
         final File file = storeListener.getFile( ex );
@@ -74,7 +74,7 @@ public class FlatStoreListenerTest
     protected void assertExpirationCanceled( final Expiration ex )
         throws Exception
     {
-        storeListener.waitForEvent( 1000, 250 );
+        storeListener.waitForEvents( 1000, 250 );
 
         System.out.println( "\n\n\nChecking for absence of flat file for: " + ex + "\n\n\n" );
         final File file = storeListener.getFile( ex );
@@ -85,7 +85,7 @@ public class FlatStoreListenerTest
     protected void assertExpirationScheduled( final Expiration ex )
         throws Exception
     {
-        storeListener.waitForEvent( 1000, 250 );
+        storeListener.waitForEvents( 1000, 250 );
 
         System.out.println( "\n\n\nChecking for existence of flat file for: " + ex + "\n\n\n" );
         final File file = storeListener.getFile( ex );

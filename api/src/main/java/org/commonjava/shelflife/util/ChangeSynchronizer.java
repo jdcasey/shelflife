@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.commonjava.shelflife.store.flat;
+package org.commonjava.shelflife.util;
 
 import javax.inject.Singleton;
 
@@ -25,25 +25,31 @@ public class ChangeSynchronizer
 
     private final Logger logger = new Logger( getClass() );
 
-    private boolean changed = false;
+    private int changed = 0;
 
-    public synchronized void setChanged()
+    public synchronized void setChanged( final int changed )
     {
-        changed = true;
+        this.changed += changed;
+        notifyAll();
+    }
+
+    public synchronized void addChanged()
+    {
+        this.changed++;
         notifyAll();
     }
 
     public void resetChanged()
     {
-        changed = false;
+        changed = 0;
     }
 
-    public synchronized void waitForChange( final long totalMillis, final long pollMillis )
+    public synchronized int waitForChange( final int count, final long totalMillis, final long pollMillis )
     {
         final long start = System.currentTimeMillis();
         double runningTotal = 0;
 
-        while ( !changed )
+        while ( changed < count )
         {
             runningTotal = ( System.currentTimeMillis() - start );
             logger.debug( "Waited (%s ms)...", runningTotal );
@@ -65,13 +71,15 @@ public class ChangeSynchronizer
             }
         }
 
-        if ( changed )
+        if ( changed >= count )
         {
             logger.debug( "Setting changed state to false." );
-            changed = false;
+            resetChanged();
         }
 
-        logger.debug( "waitFoChange() exiting." );
+        logger.debug( "waitForChange() exiting." );
+
+        return changed;
     }
 
 }

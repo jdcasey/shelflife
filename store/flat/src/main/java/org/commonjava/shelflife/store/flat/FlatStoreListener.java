@@ -21,6 +21,7 @@ import org.commonjava.shelflife.expire.ExpirationEventType;
 import org.commonjava.shelflife.expire.ExpirationManager;
 import org.commonjava.shelflife.expire.ExpirationManagerException;
 import org.commonjava.shelflife.model.Expiration;
+import org.commonjava.shelflife.util.ChangeSynchronizer;
 import org.commonjava.util.logging.Logger;
 import org.commonjava.web.json.ser.JsonSerializer;
 
@@ -66,7 +67,7 @@ public class FlatStoreListener
             case SCHEDULE:
             {
                 store( event.getExpiration() );
-                changeSync.setChanged();
+                changeSync.addChanged();
                 break;
             }
 
@@ -74,7 +75,7 @@ public class FlatStoreListener
             case EXPIRE:
             {
                 delete( event.getExpiration() );
-                changeSync.setChanged();
+                changeSync.addChanged();
                 break;
             }
 
@@ -162,8 +163,13 @@ public class FlatStoreListener
         return loaded;
     }
 
-    public void waitForEvent( final int total, final int poll )
+    public int waitForEvents( final int count, final int timeout, final int poll )
     {
-        changeSync.waitForChange( total, poll );
+        return changeSync.waitForChange( count, timeout, poll );
+    }
+
+    public int waitForEvents( final int timeout, final int poll )
+    {
+        return changeSync.waitForChange( 1, timeout, poll );
     }
 }

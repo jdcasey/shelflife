@@ -11,13 +11,13 @@ import javax.inject.Singleton;
 
 import org.commonjava.couch.db.CouchDBException;
 import org.commonjava.couch.db.CouchManager;
-import org.commonjava.couch.util.ChangeSynchronizer;
 import org.commonjava.shelflife.expire.ExpirationEvent;
 import org.commonjava.shelflife.expire.ExpirationEventType;
 import org.commonjava.shelflife.expire.ExpirationManager;
 import org.commonjava.shelflife.expire.ExpirationManagerException;
 import org.commonjava.shelflife.inject.Shelflife;
 import org.commonjava.shelflife.model.Expiration;
+import org.commonjava.shelflife.util.ChangeSynchronizer;
 import org.commonjava.util.logging.Logger;
 import org.commonjava.web.json.ser.JsonSerializer;
 
@@ -85,7 +85,7 @@ public class CouchStoreListener
             case SCHEDULE:
             {
                 store( event.getExpiration() );
-                changeSync.setChanged();
+                changeSync.addChanged();
                 break;
             }
 
@@ -93,7 +93,7 @@ public class CouchStoreListener
             case EXPIRE:
             {
                 delete( event.getExpiration() );
-                changeSync.setChanged();
+                changeSync.addChanged();
                 break;
             }
 
@@ -104,9 +104,14 @@ public class CouchStoreListener
         }
     }
 
-    public void waitForEvent( final long total, final long poll )
+    public int waitForEvents( final int count, final int timeout, final int poll )
     {
-        changeSync.waitForChange( total, poll );
+        return changeSync.waitForChange( count, timeout, poll );
+    }
+
+    public int waitForEvents( final int timeout, final int poll )
+    {
+        return changeSync.waitForChange( 1, timeout, poll );
     }
 
     private void store( final Expiration expiration )

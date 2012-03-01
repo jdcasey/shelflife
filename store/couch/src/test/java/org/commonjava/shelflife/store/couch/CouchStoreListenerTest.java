@@ -83,9 +83,8 @@ public class CouchStoreListenerTest
     protected void assertExpirationTriggered( final Expiration ex )
         throws Exception
     {
-        couchListener.waitForEvent( 1000, 250 );
+        couchListener.waitForEvents( 1000, 250 );
 
-        // FIXME: need to somehow wait for the couch listener...can't just sleep, either.
         System.out.println( "\n\n\nChecking for absence of couch document for: " + ex + "\n\n\n" );
         final ExpirationWrapperDoc doc = couch.getDocument( new ExpirationDocRef( ex ), ExpirationWrapperDoc.class );
         assertThat( doc, nullValue() );
@@ -95,9 +94,8 @@ public class CouchStoreListenerTest
     protected void assertExpirationCanceled( final Expiration ex )
         throws Exception
     {
-        couchListener.waitForEvent( 1000, 250 );
+        couchListener.waitForEvents( 1000, 250 );
 
-        // FIXME: need to somehow wait for the couch listener...can't just sleep, either.
         System.out.println( "\n\n\nChecking for absence of couch document for: " + ex + "\n\n\n" );
         final ExpirationWrapperDoc doc = couch.getDocument( new ExpirationDocRef( ex ), ExpirationWrapperDoc.class );
         assertThat( doc, nullValue() );
@@ -107,9 +105,8 @@ public class CouchStoreListenerTest
     protected void assertExpirationScheduled( final Expiration ex )
         throws Exception
     {
-        couchListener.waitForEvent( 1000, 250 );
+        couchListener.waitForEvents( 1000, 250 );
 
-        // FIXME: need to somehow wait for the couch listener...can't just sleep, either.
         System.out.println( "\n\n\nChecking for existence of couch document for: " + ex + "\n\n\n" );
         final ExpirationWrapperDoc doc = couch.getDocument( new ExpirationDocRef( ex ), ExpirationWrapperDoc.class );
         assertThat( doc, notNullValue() );
