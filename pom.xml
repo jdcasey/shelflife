@@ -10,7 +10,7 @@
   
   <groupId>org.commonjava.shelflife</groupId>
   <artifactId>shelflife</artifactId>
-  <version>0.1</version>
+  <version>0.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Shelf-Life Expiration Manager</name>
@@ -30,23 +30,23 @@
       <dependency>
         <groupId>org.commonjava.shelflife</groupId>
         <artifactId>shelflife-api</artifactId>
-        <version>0.1</version>
+        <version>0.2-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.commonjava.shelflife</groupId>
         <artifactId>shelflife-core</artifactId>
-        <version>0.1</version>
+        <version>0.2-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.commonjava.shelflife</groupId>
         <artifactId>shelflife-core-tck</artifactId>
-        <version>0.1</version>
+        <version>0.2-SNAPSHOT</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.commonjava.shelflife</groupId>
         <artifactId>shelflife-filer</artifactId>
-        <version>0.1</version>
+        <version>0.2-SNAPSHOT</version>
       </dependency>
       
       <dependency>
