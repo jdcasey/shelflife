@@ -16,9 +16,9 @@
   <name>Shelf-Life Expiration Manager</name>
 
   <scm>
-    <connection>scm:git:http://jdcasey@github.com/jdcasey/halflife.git</connection>
-    <developerConnection>scm:git:git@github.com:jdcasey/halflife.git</developerConnection>
-    <url>http://github.com/jdcasey/halflife</url>
+    <connection>scm:git:http://jdcasey@github.com/jdcasey/shelflife.git</connection>
+    <developerConnection>scm:git:git@github.com:jdcasey/shelflife.git</developerConnection>
+    <url>http://github.com/jdcasey/shelflife</url>
   </scm>
 
   <properties>
