@@ -8,6 +8,9 @@ import org.commonjava.shelflife.model.Expiration;
 public interface ExpirationManager
 {
 
+    boolean contains( Expiration expiration )
+        throws ExpirationManagerException;
+
     void schedule( Expiration expiration )
         throws ExpirationManagerException;
 

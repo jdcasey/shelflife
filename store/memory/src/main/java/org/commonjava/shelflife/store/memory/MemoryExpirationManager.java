@@ -1,4 +1,4 @@
-package org.commonjava.shelflife.expire;
+package org.commonjava.shelflife.store.memory;
 
 import static org.commonjava.shelflife.expire.ExpirationEventType.CANCEL;
 import static org.commonjava.shelflife.expire.ExpirationEventType.EXPIRE;
@@ -17,6 +17,9 @@ import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.commonjava.shelflife.expire.ExpirationEvent;
+import org.commonjava.shelflife.expire.ExpirationManager;
+import org.commonjava.shelflife.expire.ExpirationManagerException;
 import org.commonjava.shelflife.expire.match.ExpirationMatcher;
 import org.commonjava.shelflife.model.Expiration;
 import org.commonjava.util.logging.Logger;
@@ -184,6 +187,13 @@ public class MemoryExpirationManager
                 timer.schedule( new ExpirationTask( expiration ), expiration.getExpires() - System.currentTimeMillis() );
             }
         }
+    }
+
+    @Override
+    public boolean contains( final Expiration expiration )
+        throws ExpirationManagerException
+    {
+        return expirations.contains( expiration );
     }
 
 }

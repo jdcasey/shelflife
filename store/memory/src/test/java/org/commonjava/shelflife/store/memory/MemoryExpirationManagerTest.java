@@ -1,7 +1,8 @@
-package org.commonjava.shelflife.expire;
+package org.commonjava.shelflife.store.memory;
 
 import org.apache.log4j.Level;
 import org.commonjava.shelflife.ExpirationManagerTCK;
+import org.commonjava.shelflife.expire.ExpirationManager;
 import org.commonjava.shelflife.fixture.TestExpirationListener;
 import org.commonjava.util.logging.Log4jUtil;
 import org.jboss.weld.environment.se.Weld;

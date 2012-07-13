@@ -16,14 +16,33 @@ import org.commonjava.shelflife.expire.match.PrefixMatcher;
 import org.commonjava.shelflife.fixture.TestExpirationListener;
 import org.commonjava.shelflife.model.Expiration;
 import org.commonjava.shelflife.model.ExpirationKey;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 public abstract class ExpirationManagerTCK
 {
 
+    @Rule
+    public TestName name = new TestName();
+
     protected abstract ExpirationManager getManager();
 
     protected abstract TestExpirationListener getListener();
+
+    @Before
+    public void printStart()
+    {
+        System.out.println( "\n\n\n\nSTART: " + name.getMethodName() + "\n\n\n\n" );
+    }
+
+    @After
+    public void printEnd()
+    {
+        System.out.println( "\n\n\n\nSTART: " + name.getMethodName() + "\n\n\n\n" );
+    }
 
     protected long getEventTimeout()
     {
@@ -199,12 +218,14 @@ public abstract class ExpirationManagerTCK
 
         Thread.sleep( getEventTimeout() );
 
+        System.out.println( "Triggering all..." );
         getManager().triggerAll();
 
         Thread.sleep( getEventTimeout() );
 
         for ( final Expiration ex : exs )
         {
+            System.out.println( "Asserting that " + ex + " is NOT active..." );
             assertThat( ex.isActive(), equalTo( false ) );
             assertExpirationTriggered( ex );
         }

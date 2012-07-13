@@ -30,22 +30,26 @@ public class ChangeSynchronizer
     public synchronized void setChanged( final int changed )
     {
         this.changed += changed;
+        logger.debug( "setting changed = " + changed );
         notifyAll();
     }
 
     public synchronized void addChanged()
     {
         this.changed++;
+        logger.debug( "Adding change: " + this.changed );
         notifyAll();
     }
 
     public void resetChanged()
     {
+        logger.debug( "RESET" );
         changed = 0;
     }
 
     public synchronized int waitForChange( final int count, final long totalMillis, final long pollMillis )
     {
+        logger.debug( "Waiting for %d events to occur...%d have already happened.", count, changed );
         final long start = System.currentTimeMillis();
         double runningTotal = 0;
 

@@ -7,17 +7,20 @@
     <version>0.2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>shelflife-store-couch</artifactId>
-  <name>Shelf-Life :: CouchDB Store</name>
-
+  <artifactId>shelflife-store-memory</artifactId>
+  <name>Shelf-Life :: In-Memory Store</name>
   <dependencies>
-    <parent>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>shelflife-store-memory</artifactId>
-    </parent>
     <dependency>
-      <groupId>org.commonjava.couch</groupId>
-      <artifactId>couch-app-support</artifactId>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.commonjava.web</groupId>
+      <artifactId>json-serialization</artifactId>
     </dependency>
     <dependency>
       <groupId>org.jboss.weld.se</groupId>
@@ -26,6 +29,10 @@
     <dependency>
       <groupId>org.jboss.spec.javax.servlet</groupId>
       <artifactId>jboss-servlet-api_3.0_spec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
     </dependency>
   </dependencies>
 </project>
