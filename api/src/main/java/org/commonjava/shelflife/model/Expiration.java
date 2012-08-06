@@ -29,7 +29,10 @@ public final class Expiration
     public Expiration( final ExpirationKey key, final long expires, final Object data )
     {
         this.key = key;
-        this.expires = expires < System.currentTimeMillis() ? expires + System.currentTimeMillis() : expires;
+        final long current = System.currentTimeMillis();
+        this.expires = expires < current ? expires + current : expires;
+        System.out.println( "[" + current + "] Expire given as: " + expires + ", actual expires set to: "
+            + this.expires );
         this.data = data;
     }
 

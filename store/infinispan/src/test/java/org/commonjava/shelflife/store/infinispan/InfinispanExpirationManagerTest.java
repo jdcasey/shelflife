@@ -98,7 +98,7 @@ public class InfinispanExpirationManagerTest
         System.out.println( "waiting for cancel event..." );
         if ( !changeListener.isCanceled( ex ) )
         {
-            changeListener.waitForEvents( 500, 250 );
+            changeListener.waitForEvents( getEventTimeout(), 250 );
         }
 
         System.out.println( "Checking whether " + ex + " was canceled..." );
@@ -113,7 +113,7 @@ public class InfinispanExpirationManagerTest
         System.out.println( "waiting for schedule event..." );
         if ( !changeListener.isScheduled( ex ) )
         {
-            changeListener.waitForEvents( 500, 250 );
+            changeListener.waitForEvents( getEventTimeout(), 250 );
         }
 
         System.out.println( "Checking whether " + ex + " was scheduled..." );
@@ -123,7 +123,7 @@ public class InfinispanExpirationManagerTest
     @Override
     protected long getEventTimeout()
     {
-        return 1000;
+        return super.getEventTimeout() + 3000; // for infinispan startup?
     }
 
 }

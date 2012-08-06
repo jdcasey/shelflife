@@ -3,7 +3,8 @@
    <namedCache name="shelflife" >
       <indexing enabled="true" indexLocalOnly="true">
          <properties>
-            <property name="hibernate.search.default.directory_provider" value="ram" />
+            <property name="hibernate.search.default.directory_provider" value="infinispan" />
+            <property name="hibernate.search.default.infinispan.configuration_resourcename" value="${this.file}" />
          </properties>
       </indexing>
    </namedCache>

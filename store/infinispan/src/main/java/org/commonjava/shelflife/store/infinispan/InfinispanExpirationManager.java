@@ -73,31 +73,43 @@ public class InfinispanExpirationManager
     public void schedule( final Expiration expiration )
         throws ExpirationManagerException
     {
-        final long expires = expiration.getExpires() - System.currentTimeMillis();
-        if ( expires < NEXT_EXPIRATION_BATCH_OFFSET )
+        synchronized ( expiration )
         {
-            synchronized ( currentExpirations )
+            if ( contains( expiration ) )
             {
-                currentExpirations.add( expiration );
+                logger.info( "SKIPPING SCHEDULE: %s. Already scheduled!", expiration.getKey() );
+                return;
             }
-            timer.schedule( new ExpirationTask( expiration ), expires );
+
+            final long expires = expiration.getExpires() - System.currentTimeMillis();
+            if ( expires < NEXT_EXPIRATION_BATCH_OFFSET )
+            {
+                synchronized ( currentExpirations )
+                {
+                    currentExpirations.add( expiration );
+                }
+                timer.schedule( new ExpirationTask( expiration ), expires );
+            }
+
+            expirationCache.put( expiration.getKey(), expiration );
+
+            logger.info( "\n\n[%s] SCHEDULED %s, expires: %s\nCurrent time: %s\n\n", System.currentTimeMillis(),
+                         expiration.getKey(), new Date( expiration.getExpires() ), new Date() );
+            eventQueue.fire( new ExpirationEvent( expiration, SCHEDULE ) );
         }
-
-        expirationCache.put( expiration.getKey(), expiration );
-
-        logger.info( "[SCHEDULED] %s, expires: %s\nCurrent time: %s", expiration.getKey(),
-                     new Date( expiration.getExpires() ), new Date() );
-        eventQueue.fire( new ExpirationEvent( expiration, SCHEDULE ) );
     }
 
     @Override
     public void cancel( final Expiration expiration )
         throws ExpirationManagerException
     {
+        logger.info( "\n\n[%s] ATTEMPTING CANCEL: %s\n\n", System.currentTimeMillis(), expiration.getKey() );
         synchronized ( expiration )
         {
+            logger.debug( "Is expiration still active? If not, skip cancellation! %s", expiration.isActive() );
             if ( expiration.isActive() && contains( expiration ) )
             {
+                logger.debug( "doing cancel: %s", expiration );
                 expiration.cancel();
 
                 synchronized ( currentExpirations )
@@ -107,7 +119,8 @@ public class InfinispanExpirationManager
 
                 expirationCache.remove( expiration.getKey() );
 
-                logger.info( "[CANCELED] %s at: %s", expiration.getKey(), new Date() );
+                logger.info( "\n\n[%s] CANCELED %s at: %s\n\n", System.currentTimeMillis(), expiration.getKey(),
+                             new Date() );
                 eventQueue.fire( new ExpirationEvent( expiration, CANCEL ) );
             }
         }
@@ -117,19 +130,25 @@ public class InfinispanExpirationManager
     public void trigger( final Expiration expiration )
         throws ExpirationManagerException
     {
-        if ( expiration.isActive() && contains( expiration ) )
+        logger.info( "\n\n[%s] ATTEMPTING TRIGGER: %s\n\n", System.currentTimeMillis(), expiration.getKey() );
+        synchronized ( expiration )
         {
-            expiration.expire();
-
-            synchronized ( currentExpirations )
+            logger.debug( "Is expiration still active? If not, skip trigger! %s", expiration.isActive() );
+            if ( expiration.isActive() && contains( expiration ) )
             {
-                currentExpirations.remove( expiration );
+                expiration.expire();
+
+                synchronized ( currentExpirations )
+                {
+                    currentExpirations.remove( expiration );
+                }
+
+                expirationCache.remove( expiration.getKey() );
+
+                logger.info( "\n\n[%s] TRIGGERED %s at: %s\n\n", System.currentTimeMillis(), expiration.getKey(),
+                             new Date() );
+                eventQueue.fire( new ExpirationEvent( expiration, EXPIRE ) );
             }
-
-            expirationCache.remove( expiration.getKey() );
-
-            logger.info( "[TRIGGERED] %s at: %s", expiration.getKey(), new Date() );
-            eventQueue.fire( new ExpirationEvent( expiration, EXPIRE ) );
         }
     }
 
@@ -162,9 +181,11 @@ public class InfinispanExpirationManager
     public void cancelAll()
         throws ExpirationManagerException
     {
-        logger.debug( "[CANCEL] ALL" );
-        for ( final Expiration exp : all() )
+        final Set<Expiration> all = all();
+        logger.debug( "[CANCEL] ALL(%s)", all.size() );
+        for ( final Expiration exp : all )
         {
+            logger.info( "[%s] Canceling: %s", System.currentTimeMillis(), exp );
             cancel( exp );
         }
     }
@@ -185,14 +206,21 @@ public class InfinispanExpirationManager
     {
         for ( final Expiration expiration : expirations )
         {
+            // synchronized ( currentExpirations )
+            // {
             this.currentExpirations.add( expiration );
+            // }
+
             if ( expiration.getExpires() <= System.currentTimeMillis() )
             {
                 trigger( expiration );
             }
             else
             {
-                timer.schedule( new ExpirationTask( expiration ), expiration.getExpires() - System.currentTimeMillis() );
+                final long time = expiration.getExpires() - System.currentTimeMillis();
+                System.out.println( " [" + System.currentTimeMillis() + "] Scheduling " + expiration + " for " + time
+                    + " ms from now (@" + expiration.getExpires() + ")" );
+                timer.schedule( new ExpirationTask( expiration ), time );
             }
         }
     }
@@ -200,6 +228,8 @@ public class InfinispanExpirationManager
     @Override
     public boolean contains( final Expiration expiration )
     {
+        logger.debug( "Is expiration in current expirations? %s Is it cached? %s",
+                      currentExpirations.contains( expiration ), expirationCache.containsKey( expiration.getKey() ) );
         return currentExpirations.contains( expiration ) || expirationCache.containsKey( expiration.getKey() );
     }
 
@@ -283,8 +313,16 @@ public class InfinispanExpirationManager
         @Override
         public void run()
         {
+            if ( !expiration.isActive() )
+            {
+                logger.info( "Expiration no longer active: %s", expiration );
+                return;
+            }
+
             try
             {
+                logger.info( "\n\n\n [%s] TRIGGERING: %s (expiration timeout: %s)\n\n\n", System.currentTimeMillis(),
+                             expiration, expiration.getExpires() );
                 trigger( expiration );
             }
             catch ( final ExpirationManagerException e )

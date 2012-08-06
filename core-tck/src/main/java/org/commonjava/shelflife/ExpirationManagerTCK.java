@@ -118,9 +118,14 @@ public abstract class ExpirationManagerTCK
         final Expiration ex = new Expiration( new ExpirationKey( "test", "one" ), 500 );
         getManager().loadedFromStorage( Collections.singleton( ex ) );
 
+        System.out.println( "\n\n\n [" + System.currentTimeMillis() + "] Waiting: " + getEventTimeout()
+            + " for expiration timeout\n\n\n" );
         Thread.sleep( getEventTimeout() );
+        // Thread.sleep( 4000 );
 
+        System.out.println( "\n\n\n [" + System.currentTimeMillis() + "] Verifying expiration timed out\n\n\n" );
         assertThat( ex.isActive(), equalTo( false ) );
+        System.out.println( "\n\n\n [" + System.currentTimeMillis() + "] Verifying expiration triggered\n\n\n" );
         assertExpirationTriggered( ex );
     }
 
@@ -419,7 +424,7 @@ public abstract class ExpirationManagerTCK
     public void scheduleOneAndCancelBeforeExpiration()
         throws Exception
     {
-        final Expiration ex = new Expiration( new ExpirationKey( "test", "one" ), 500 );
+        final Expiration ex = new Expiration( new ExpirationKey( "test", "one" ), 5000 );
         getManager().schedule( ex );
         assertExpirationScheduled( ex );
         final long start = System.currentTimeMillis();
@@ -429,6 +434,7 @@ public abstract class ExpirationManagerTCK
         final long stop = System.currentTimeMillis();
 
         assertThat( ex.isActive(), equalTo( false ) );
+        assertThat( ex.isCanceled(), equalTo( true ) );
         assertThat( stop - start < 500, equalTo( true ) );
 
         assertExpirationCanceled( ex );
@@ -472,9 +478,9 @@ public abstract class ExpirationManagerTCK
         throws Exception
     {
         final Expiration[] exs =
-            { new Expiration( new ExpirationKey( "test", "one" ), 5000 ),
-                new Expiration( new ExpirationKey( "test", "two" ), 5000 ),
-                new Expiration( new ExpirationKey( "test", "three" ), 5000 ), };
+            { new Expiration( new ExpirationKey( "test", "one" ), 10000 ),
+                new Expiration( new ExpirationKey( "test", "two" ), 10000 ),
+                new Expiration( new ExpirationKey( "test", "three" ), 10000 ), };
 
         for ( final Expiration ex : exs )
         {
@@ -567,9 +573,9 @@ public abstract class ExpirationManagerTCK
         throws Exception
     {
         final Expiration[] exs =
-            { new Expiration( new ExpirationKey( "test", "one" ), 5000 ),
-                new Expiration( new ExpirationKey( "test", "two" ), 5000 ),
-                new Expiration( new ExpirationKey( "test", "three" ), 5000 ), };
+            { new Expiration( new ExpirationKey( "test", "one" ), 10000 ),
+                new Expiration( new ExpirationKey( "test", "two" ), 10000 ),
+                new Expiration( new ExpirationKey( "test", "three" ), 10000 ), };
 
         for ( final Expiration ex : exs )
         {

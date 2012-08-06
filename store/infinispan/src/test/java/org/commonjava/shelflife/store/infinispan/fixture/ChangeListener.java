@@ -75,12 +75,12 @@ public class ChangeListener
         return canceled.contains( ex );
     }
 
-    public int waitForEvents( final int count, final int timeout, final int poll )
+    public int waitForEvents( final int count, final long timeout, final long poll )
     {
         return changeSync.waitForChange( count, timeout, poll );
     }
 
-    public int waitForEvents( final int timeout, final int poll )
+    public int waitForEvents( final long timeout, final long poll )
     {
         return changeSync.waitForChange( 1, timeout, poll );
     }
