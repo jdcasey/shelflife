@@ -32,8 +32,18 @@
   
   <modules>
     <module>memory</module>
-    <module>couch</module>
+    <!-- <module>couch</module> -->
     <module>flat</module>
     <module>infinispan</module>
   </modules>
+  
+  <profiles>
+    <profile>
+      <id>mothballed</id>
+      
+      <modules>
+        <module>couch</module>
+      </modules>
+    </profile>
+  </profiles>
 </project>
