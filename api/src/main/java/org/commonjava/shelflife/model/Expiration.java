@@ -33,15 +33,15 @@ public final class Expiration
         this( key, expires, null );
     }
 
-    //    // dead; for queries
-    //    public Expiration( final ExpirationKey key )
-    //    {
-    //        this.key = key;
-    //        this.expires = 0;
-    //        this.data = null;
-    //        this.active = false;
-    //    }
-    //
+    // dead; for queries
+    public Expiration( final ExpirationKey key )
+    {
+        this.key = key;
+        this.expires = 0;
+        this.data = null;
+        this.active = false;
+    }
+
     public ExpirationKey getKey()
     {
         return key;
