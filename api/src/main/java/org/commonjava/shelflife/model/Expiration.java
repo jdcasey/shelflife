@@ -2,14 +2,6 @@ package org.commonjava.shelflife.model;
 
 import java.io.Serializable;
 
-import org.commonjava.shelflife.util.ExpirationKeyBridge;
-import org.hibernate.search.annotations.Field;
-import org.hibernate.search.annotations.FieldBridge;
-import org.hibernate.search.annotations.Indexed;
-import org.hibernate.search.annotations.ProvidedId;
-
-@Indexed
-@ProvidedId
 public final class Expiration
     implements Serializable
 {
@@ -41,23 +33,20 @@ public final class Expiration
         this( key, expires, null );
     }
 
-    // dead; for queries
-    public Expiration( final ExpirationKey key )
-    {
-        this.key = key;
-        this.expires = 0;
-        this.data = null;
-        this.active = false;
-    }
-
-    @Field
-    @FieldBridge( impl = ExpirationKeyBridge.class )
+    //    // dead; for queries
+    //    public Expiration( final ExpirationKey key )
+    //    {
+    //        this.key = key;
+    //        this.expires = 0;
+    //        this.data = null;
+    //        this.active = false;
+    //    }
+    //
     public ExpirationKey getKey()
     {
         return key;
     }
 
-    @Field
     public long getExpires()
     {
         return expires;

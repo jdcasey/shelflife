@@ -5,16 +5,13 @@ import static org.apache.commons.lang.StringUtils.join;
 import java.io.Serializable;
 import java.util.Arrays;
 
-import org.infinispan.query.Transformable;
-
-@Transformable
 public class ExpirationKey
     implements Serializable
 {
 
     private static final long serialVersionUID = 1L;
 
-    public String[] parts;
+    private final String[] parts;
 
     public ExpirationKey( final String firstPart, final String... parts )
     {

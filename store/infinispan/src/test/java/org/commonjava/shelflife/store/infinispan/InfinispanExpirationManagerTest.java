@@ -43,6 +43,8 @@ public class InfinispanExpirationManagerTest
                            .select( TestConfigProvider.class )
                            .get();
 
+        System.out.println( "\n\n\n\nGot test config provider.\n\n\n\n" );
+
         manager = wc.instance()
                     .select( ExpirationManager.class )
                     .get();
@@ -60,8 +62,15 @@ public class InfinispanExpirationManagerTest
     @After
     public void after()
     {
-        configProvider.stopCacheManager();
-        weld.shutdown();
+        if ( configProvider != null )
+        {
+            configProvider.stopCacheManager();
+        }
+
+        if ( weld != null )
+        {
+            weld.shutdown();
+        }
     }
 
     @Override
