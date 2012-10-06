@@ -4,11 +4,10 @@ import static org.commonjava.shelflife.expire.ExpirationEventType.CANCEL;
 import static org.commonjava.shelflife.expire.ExpirationEventType.EXPIRE;
 import static org.commonjava.shelflife.expire.ExpirationEventType.SCHEDULE;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -22,6 +21,7 @@ import org.commonjava.shelflife.expire.ExpirationManager;
 import org.commonjava.shelflife.expire.ExpirationManagerException;
 import org.commonjava.shelflife.expire.match.ExpirationMatcher;
 import org.commonjava.shelflife.model.Expiration;
+import org.commonjava.shelflife.model.ExpirationKey;
 import org.commonjava.util.logging.Logger;
 
 @Singleton
@@ -33,7 +33,7 @@ public class MemoryExpirationManager
 
     private final Timer timer = new Timer( true );
 
-    private final List<Expiration> expirations = new ArrayList<Expiration>();
+    private final LinkedHashMap<ExpirationKey, Expiration> expirations = new LinkedHashMap<ExpirationKey, Expiration>();
 
     @Inject
     private Event<ExpirationEvent> eventQueue;
@@ -42,7 +42,7 @@ public class MemoryExpirationManager
     public void schedule( final Expiration expiration )
         throws ExpirationManagerException
     {
-        expirations.add( expiration );
+        expirations.put( expiration.getKey(), expiration );
         timer.schedule( new ExpirationTask( expiration ), expiration.getExpires() - System.currentTimeMillis() );
         logger.info( "[SCHEDULED] %s, expires: %s", expiration.getKey(), new Date( expiration.getExpires() ) );
         eventQueue.fire( new ExpirationEvent( expiration, SCHEDULE ) );
@@ -54,7 +54,7 @@ public class MemoryExpirationManager
     {
         synchronized ( expiration )
         {
-            if ( expiration.isActive() && expirations.contains( expiration ) )
+            if ( expiration.isActive() && expirations.containsKey( expiration.getKey() ) )
             {
                 expiration.cancel();
                 expirations.remove( expiration );
@@ -65,12 +65,35 @@ public class MemoryExpirationManager
     }
 
     @Override
+    public void cancel( final ExpirationKey key )
+        throws ExpirationManagerException
+    {
+        final Expiration expiration = expirations.get( key );
+        if ( expiration != null )
+        {
+            cancel( expiration );
+        }
+
+    }
+
+    @Override
+    public void trigger( final ExpirationKey key )
+        throws ExpirationManagerException
+    {
+        final Expiration expiration = expirations.get( key );
+        if ( expiration != null )
+        {
+            trigger( expiration );
+        }
+    }
+
+    @Override
     public void trigger( final Expiration expiration )
         throws ExpirationManagerException
     {
         synchronized ( expiration )
         {
-            if ( expiration.isActive() && expirations.contains( expiration ) )
+            if ( expiration.isActive() && expirations.containsKey( expiration.getKey() ) )
             {
                 expiration.expire();
                 expirations.remove( expiration );
@@ -84,7 +107,7 @@ public class MemoryExpirationManager
     public void triggerAll()
         throws ExpirationManagerException
     {
-        for ( final Expiration exp : new LinkedHashSet<Expiration>( expirations ) )
+        for ( final Expiration exp : new LinkedHashSet<Expiration>( expirations.values() ) )
         {
             trigger( exp );
         }
@@ -107,7 +130,7 @@ public class MemoryExpirationManager
     public void cancelAll()
         throws ExpirationManagerException
     {
-        for ( final Expiration exp : new LinkedHashSet<Expiration>( expirations ) )
+        for ( final Expiration exp : new LinkedHashSet<Expiration>( expirations.values() ) )
         {
             cancel( exp );
         }
@@ -126,7 +149,7 @@ public class MemoryExpirationManager
     private Set<Expiration> getMatching( final ExpirationMatcher matcher )
     {
         final Set<Expiration> matching = new LinkedHashSet<Expiration>();
-        for ( final Expiration exp : expirations )
+        for ( final Expiration exp : expirations.values() )
         {
             if ( matcher.matches( exp ) )
             {
@@ -177,7 +200,7 @@ public class MemoryExpirationManager
     {
         for ( final Expiration expiration : expirations )
         {
-            this.expirations.add( expiration );
+            this.expirations.put( expiration.getKey(), expiration );
             if ( expiration.getExpires() <= System.currentTimeMillis() )
             {
                 trigger( expiration );
@@ -193,7 +216,7 @@ public class MemoryExpirationManager
     public boolean contains( final Expiration expiration )
         throws ExpirationManagerException
     {
-        return expirations.contains( expiration );
+        return expirations.containsKey( expiration.getKey() );
     }
 
 }

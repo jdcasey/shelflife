@@ -6,12 +6,11 @@ import static org.commonjava.shelflife.expire.ExpirationEventType.SCHEDULE;
 import static org.commonjava.shelflife.store.infinispan.BlockKeyUtils.generateCurrentBlockKey;
 import static org.commonjava.shelflife.store.infinispan.BlockKeyUtils.generateNextBlockKey;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Timer;
@@ -53,7 +52,8 @@ public class InfinispanExpirationManager
 
     private final Timer timer = new Timer( true );
 
-    private final List<Expiration> currentExpirations = new ArrayList<Expiration>();
+    private final LinkedHashMap<ExpirationKey, Expiration> currentExpirations =
+        new LinkedHashMap<ExpirationKey, Expiration>();
 
     @Inject
     private Event<ExpirationEvent> eventQueue;
@@ -96,7 +96,7 @@ public class InfinispanExpirationManager
         {
             synchronized ( currentExpirations )
             {
-                currentExpirations.add( expiration );
+                currentExpirations.put( expiration.getKey(), expiration );
             }
             timer.schedule( new ExpirationTask( expiration ), expires );
         }
@@ -136,6 +136,17 @@ public class InfinispanExpirationManager
         }
     }
 
+    @Override
+    public void cancel( final ExpirationKey key )
+        throws ExpirationManagerException
+    {
+        final Expiration expiration = expirationCache.get( key );
+        if ( expiration != null )
+        {
+            cancel( expiration );
+        }
+    }
+
     private synchronized void remove( final Expiration expiration )
     {
         final String blockKey = generateNextBlockKey( expiration.getExpires() );
@@ -170,6 +181,17 @@ public class InfinispanExpirationManager
             logger.info( "\n\n[%s] TRIGGERED %s at: %s\n\n", System.currentTimeMillis(), expiration.getKey(),
                          new Date() );
             eventQueue.fire( new ExpirationEvent( expiration, EXPIRE ) );
+        }
+    }
+
+    @Override
+    public void trigger( final ExpirationKey key )
+        throws ExpirationManagerException
+    {
+        final Expiration expiration = expirationCache.get( key );
+        if ( expiration != null )
+        {
+            trigger( expiration );
         }
     }
 
@@ -229,7 +251,7 @@ public class InfinispanExpirationManager
         {
             // synchronized ( currentExpirations )
             // {
-            this.currentExpirations.add( expiration );
+            this.currentExpirations.put( expiration.getKey(), expiration );
             // }
 
             if ( expiration.getExpires() <= System.currentTimeMillis() )
@@ -249,9 +271,8 @@ public class InfinispanExpirationManager
     @Override
     public boolean contains( final Expiration expiration )
     {
-        logger.debug( "Is expiration in current expirations? %s Is it cached? %s",
-                      currentExpirations.contains( expiration ), expirationCache.containsKey( expiration.getKey() ) );
-        return currentExpirations.contains( expiration ) || expirationCache.containsKey( expiration.getKey() );
+        return currentExpirations.containsKey( expiration.getKey() )
+            || expirationCache.containsKey( expiration.getKey() );
     }
 
     private Set<Expiration> getMatching( final ExpirationMatcher matcher )
@@ -284,13 +305,13 @@ public class InfinispanExpirationManager
     {
         private final Cache<ExpirationKey, Expiration> expirationCache;
 
-        private final List<Expiration> currentExpirations;
+        private final LinkedHashMap<ExpirationKey, Expiration> currentExpirations;
 
         private final Cache<String, Set<ExpirationKey>> expirationBlocks;
 
         LoadNextExpirationsTask( final Cache<String, Set<ExpirationKey>> expirationBlocks,
                                  final Cache<ExpirationKey, Expiration> expirationCache,
-                                 final List<Expiration> currentExpirations )
+                                 final LinkedHashMap<ExpirationKey, Expiration> currentExpirations )
         {
             this.expirationBlocks = expirationBlocks;
             this.expirationCache = expirationCache;
@@ -308,9 +329,9 @@ public class InfinispanExpirationManager
                 for ( final ExpirationKey expirationKey : expirationKeys )
                 {
                     final Expiration expiration = expirationCache.get( expirationKey );
-                    if ( !currentExpirations.contains( expiration ) )
+                    if ( !currentExpirations.containsKey( expiration ) )
                     {
-                        currentExpirations.add( expiration );
+                        currentExpirations.put( expirationKey, expiration );
                     }
                 }
             }
