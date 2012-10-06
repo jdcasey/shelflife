@@ -161,7 +161,7 @@ public class InfinispanExpirationManager
             }
         }
 
-        currentExpirations.remove( expiration );
+        currentExpirations.remove( expiration.getKey() );
 
         expirationCache.remove( expiration.getKey() );
     }
