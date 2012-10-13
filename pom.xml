@@ -25,6 +25,14 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
+  <distributionManagement>
+    <snapshotRepository>
+      <id>local-snapshots</id>
+      <name>Local Snapshots</name>
+      <url>http://localhost/aprox/api/1.0/group/public/</url>
+    </snapshotRepository>
+  </distributionManagement>
+  
   <dependencyManagement>
     <dependencies>
       <dependency>
