@@ -265,5 +265,6 @@
     <module>filer</module>
     <module>store</module>
     <module>core-tck</module>
+    <module>bom</module>
   </modules>
 </project>
