@@ -4,7 +4,6 @@ import java.util.Set;
 
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 import org.commonjava.shelflife.model.Expiration;
 import org.commonjava.shelflife.model.ExpirationKey;
@@ -12,7 +11,7 @@ import org.commonjava.util.logging.Logger;
 import org.infinispan.Cache;
 import org.infinispan.manager.CacheContainer;
 
-@Singleton
+@javax.enterprise.context.ApplicationScoped
 public class ShelflifeCacheProvider
 {
 

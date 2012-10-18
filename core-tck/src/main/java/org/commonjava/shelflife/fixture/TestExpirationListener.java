@@ -4,11 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.enterprise.event.Observes;
-import javax.inject.Singleton;
 
 import org.commonjava.shelflife.expire.ExpirationEvent;
 
-@Singleton
+@javax.enterprise.context.ApplicationScoped
 public class TestExpirationListener
 {
 

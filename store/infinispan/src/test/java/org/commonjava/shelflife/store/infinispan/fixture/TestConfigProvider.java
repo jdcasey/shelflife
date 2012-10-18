@@ -4,13 +4,12 @@ import java.io.IOException;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.inject.Produces;
-import javax.inject.Singleton;
 
 import org.commonjava.util.logging.Logger;
 import org.infinispan.manager.CacheContainer;
 import org.infinispan.manager.DefaultCacheManager;
 
-@Singleton
+@javax.enterprise.context.ApplicationScoped
 public class TestConfigProvider
 {
 

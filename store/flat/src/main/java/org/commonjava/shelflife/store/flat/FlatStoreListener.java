@@ -14,7 +14,6 @@ import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 import org.commonjava.shelflife.expire.ExpirationEvent;
 import org.commonjava.shelflife.expire.ExpirationEventType;
@@ -25,7 +24,7 @@ import org.commonjava.shelflife.util.ChangeSynchronizer;
 import org.commonjava.util.logging.Logger;
 import org.commonjava.web.json.ser.JsonSerializer;
 
-@Singleton
+@javax.enterprise.context.ApplicationScoped
 public class FlatStoreListener
 {
 

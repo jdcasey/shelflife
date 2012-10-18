@@ -5,11 +5,10 @@ import java.io.IOException;
 
 import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Produces;
-import javax.inject.Singleton;
 
 import org.commonjava.shelflife.store.flat.FlatShelflifeStoreConfiguration;
 
-@Singleton
+@javax.enterprise.context.ApplicationScoped
 public class TestConfigProvider
 {
 

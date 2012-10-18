@@ -7,7 +7,6 @@ import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 import org.commonjava.couch.db.CouchDBException;
 import org.commonjava.couch.db.CouchManager;
@@ -21,7 +20,7 @@ import org.commonjava.shelflife.util.ChangeSynchronizer;
 import org.commonjava.util.logging.Logger;
 import org.commonjava.web.json.ser.JsonSerializer;
 
-@Singleton
+@javax.enterprise.context.ApplicationScoped
 public class CouchStoreListener
 {
 

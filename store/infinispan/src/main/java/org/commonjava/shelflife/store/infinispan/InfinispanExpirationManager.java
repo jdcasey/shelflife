@@ -8,9 +8,11 @@ import static org.commonjava.shelflife.store.infinispan.BlockKeyUtils.generateNe
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Timer;
@@ -21,7 +23,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 import org.commonjava.shelflife.expire.ExpirationEvent;
 import org.commonjava.shelflife.expire.ExpirationManager;
@@ -34,7 +35,7 @@ import org.commonjava.shelflife.store.infinispan.inject.ShelflifeCaches;
 import org.commonjava.util.logging.Logger;
 import org.infinispan.Cache;
 
-@Singleton
+@javax.enterprise.context.ApplicationScoped
 public class InfinispanExpirationManager
     implements ExpirationManager
 {
@@ -43,6 +44,11 @@ public class InfinispanExpirationManager
 
     private static final long NEXT_EXPIRATION_BATCH_OFFSET =
         TimeUnit.MILLISECONDS.convert( NEXT_EXPIRATION_OFFSET_MINUTES, TimeUnit.MINUTES );
+
+    public static final int NEXT_PURGE_OFFSET_SECONDS = 5;
+
+    private static final long NEXT_PURGE_OFFSET = TimeUnit.MILLISECONDS.convert( NEXT_PURGE_OFFSET_SECONDS,
+                                                                                 TimeUnit.SECONDS );
 
     public static final String BLOCK_CACHE_NAME = "shelflife-blocks";
 
@@ -71,8 +77,9 @@ public class InfinispanExpirationManager
     @PostConstruct
     protected void init()
     {
-        timer.schedule( new LoadNextExpirationsTask( expirationBlocks, expirationCache, currentExpirations ), 0,
-                        NEXT_EXPIRATION_BATCH_OFFSET );
+        timer.schedule( new LoadNextExpirationsTask(), 0, NEXT_EXPIRATION_BATCH_OFFSET );
+
+        timer.schedule( new PurgeExpiredTask(), 1000, NEXT_PURGE_OFFSET );
     }
 
     @PreDestroy
@@ -91,14 +98,16 @@ public class InfinispanExpirationManager
             return;
         }
 
-        final long expires = expiration.getExpires() - System.currentTimeMillis();
-        if ( expires < NEXT_EXPIRATION_BATCH_OFFSET )
+        final long expires = expiration.getExpires();
+        final long expiresOffset = expires - System.currentTimeMillis();
+
+        if ( expiresOffset < NEXT_EXPIRATION_BATCH_OFFSET )
         {
             synchronized ( currentExpirations )
             {
                 currentExpirations.put( expiration.getKey(), expiration );
             }
-            timer.schedule( new ExpirationTask( expiration ), expires );
+            //            timer.schedule( new ExpirationTask( expiration ), expires );
         }
 
         final String blockKey = generateNextBlockKey( expires );
@@ -249,21 +258,17 @@ public class InfinispanExpirationManager
     {
         for ( final Expiration expiration : expirations )
         {
-            // synchronized ( currentExpirations )
-            // {
-            this.currentExpirations.put( expiration.getKey(), expiration );
-            // }
-
             if ( expiration.getExpires() <= System.currentTimeMillis() )
             {
                 trigger( expiration );
             }
             else
             {
-                final long time = expiration.getExpires() - System.currentTimeMillis();
-                System.out.println( " [" + System.currentTimeMillis() + "] Scheduling " + expiration + " for " + time
-                    + " ms from now (@" + expiration.getExpires() + ")" );
-                timer.schedule( new ExpirationTask( expiration ), time );
+                this.currentExpirations.put( expiration.getKey(), expiration );
+                //                final long time = expiration.getExpires() - System.currentTimeMillis();
+                //                System.out.println( " [" + System.currentTimeMillis() + "] Scheduling " + expiration + " for " + time
+                //                    + " ms from now (@" + expiration.getExpires() + ")" );
+                //                timer.schedule( new ExpirationTask( expiration ), time );
             }
         }
     }
@@ -300,28 +305,94 @@ public class InfinispanExpirationManager
         return result;
     }
 
+    public final class PurgeExpiredTask
+        extends TimerTask
+    {
+
+        @Override
+        public void run()
+        {
+            logger.info( "Purging expired entries." );
+
+            Map<ExpirationKey, Expiration> current;
+            synchronized ( currentExpirations )
+            {
+                current = new HashMap<ExpirationKey, Expiration>( currentExpirations );
+            }
+
+            final long time = System.currentTimeMillis();
+            for ( final Map.Entry<ExpirationKey, Expiration> entry : current.entrySet() )
+            {
+                final ExpirationKey key = entry.getKey();
+                final Expiration exp = entry.getValue();
+
+                logger.info( "Handling expiration for: %s", key );
+
+                boolean cancel = false;
+                if ( !exp.isActive() )
+                {
+                    logger.info( "Expiration no longer active: %s", exp );
+                    cancel = true;
+                    return;
+                }
+
+                if ( !cancel )
+                {
+                    if ( exp.getExpires() < time )
+                    {
+                        try
+                        {
+                            logger.info( "\n\n\n [%s] TRIGGERING: %s (expiration timeout: %s)\n\n\n",
+                                         System.currentTimeMillis(), exp, exp.getExpires() );
+                            trigger( exp );
+                        }
+                        catch ( final ExpirationManagerException e )
+                        {
+                            logger.error( "Timed trigger of: %s failed: %s", e, key, e.getMessage() );
+
+                            cancel = true;
+                        }
+                    }
+                }
+
+                if ( cancel )
+                {
+                    try
+                    {
+                        InfinispanExpirationManager.this.cancel( exp );
+                    }
+                    catch ( final ExpirationManagerException e )
+                    {
+                        logger.error( "Cannot cancel expiration: %s. Reason: %s", e, key, e.getMessage() );
+                    }
+                }
+            }
+        }
+    }
+
     public final class LoadNextExpirationsTask
         extends TimerTask
     {
-        private final Cache<ExpirationKey, Expiration> expirationCache;
-
-        private final LinkedHashMap<ExpirationKey, Expiration> currentExpirations;
-
-        private final Cache<String, Set<ExpirationKey>> expirationBlocks;
-
-        LoadNextExpirationsTask( final Cache<String, Set<ExpirationKey>> expirationBlocks,
-                                 final Cache<ExpirationKey, Expiration> expirationCache,
-                                 final LinkedHashMap<ExpirationKey, Expiration> currentExpirations )
-        {
-            this.expirationBlocks = expirationBlocks;
-            this.expirationCache = expirationCache;
-            this.currentExpirations = currentExpirations;
-        }
+        //        private final Cache<ExpirationKey, Expiration> expirationCache;
+        //
+        //        private final LinkedHashMap<ExpirationKey, Expiration> currentExpirations;
+        //
+        //        private final Cache<String, Set<ExpirationKey>> expirationBlocks;
+        //
+        //        LoadNextExpirationsTask( final Cache<String, Set<ExpirationKey>> expirationBlocks,
+        //                                 final Cache<ExpirationKey, Expiration> expirationCache,
+        //                                 final LinkedHashMap<ExpirationKey, Expiration> currentExpirations )
+        //        {
+        //            this.expirationBlocks = expirationBlocks;
+        //            this.expirationCache = expirationCache;
+        //            this.currentExpirations = currentExpirations;
+        //        }
 
         @Override
         public void run()
         {
             final String key = generateCurrentBlockKey();
+            logger.info( "Loading batch of expirations for: %s", key );
 
             final Set<ExpirationKey> expirationKeys = expirationBlocks.get( key );
             if ( expirationKeys != null )
@@ -338,46 +409,57 @@ public class InfinispanExpirationManager
         }
     }
 
-    public final class ExpirationTask
-        extends TimerTask
-    {
-        private final Expiration expiration;
-
-        ExpirationTask( final Expiration exp )
-        {
-            this.expiration = exp;
-        }
-
-        @Override
-        public void run()
-        {
-            if ( !expiration.isActive() )
-            {
-                logger.info( "Expiration no longer active: %s", expiration );
-                return;
-            }
-
-            try
-            {
-                logger.info( "\n\n\n [%s] TRIGGERING: %s (expiration timeout: %s)\n\n\n", System.currentTimeMillis(),
-                             expiration, expiration.getExpires() );
-                trigger( expiration );
-            }
-            catch ( final ExpirationManagerException e )
-            {
-                logger.error( "Timed trigger of: %s failed: %s", e, expiration.getKey(), e.getMessage() );
-
-                try
-                {
-                    InfinispanExpirationManager.this.cancel( expiration );
-                }
-                catch ( final ExpirationManagerException eC )
-                {
-                    logger.error( "Cannot cancel failed expiration: %s. Reason: %s", eC, expiration.getKey(),
-                                  eC.getMessage() );
-                }
-            }
-        }
-    }
+    //    public final class ExpirationTask
+    //        extends TimerTask
+    //    {
+    //        private final Expiration expiration;
+    //
+    //        ExpirationTask( final Expiration exp )
+    //        {
+    //            this.expiration = exp;
+    //        }
+    //
+    //        @Override
+    //        public void run()
+    //        {
+    //            logger.info( "Handling expiration for: %s", expiration.getKey() );
+    //
+    //            boolean cancel = false;
+    //            if ( !expiration.isActive() )
+    //            {
+    //                logger.info( "Expiration no longer active: %s", expiration );
+    //                cancel = true;
+    //                return;
+    //            }
+    //
+    //            if ( !cancel )
+    //            {
+    //                try
+    //                {
+    //                    logger.info( "\n\n\n [%s] TRIGGERING: %s (expiration timeout: %s)\n\n\n",
+    //                                 System.currentTimeMillis(), expiration, expiration.getExpires() );
+    //                    trigger( expiration );
+    //                }
+    //                catch ( final ExpirationManagerException e )
+    //                {
+    //                    logger.error( "Timed trigger of: %s failed: %s", e, expiration.getKey(), e.getMessage() );
+    //
+    //                    cancel = true;
+    //                }
+    //            }
+    //
+    //            if ( cancel )
+    //            {
+    //                try
+    //                {
+    //                    InfinispanExpirationManager.this.cancel( expiration );
+    //                }
+    //                catch ( final ExpirationManagerException e )
+    //                {
+    //                    logger.error( "Cannot cancel expiration: %s. Reason: %s", e, expiration.getKey(), e.getMessage() );
+    //                }
+    //            }
+    //        }
+    //    }
 
 }

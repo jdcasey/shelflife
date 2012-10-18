@@ -14,7 +14,6 @@ import java.util.TimerTask;
 
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 import org.commonjava.shelflife.expire.ExpirationEvent;
 import org.commonjava.shelflife.expire.ExpirationManager;
@@ -24,7 +23,7 @@ import org.commonjava.shelflife.model.Expiration;
 import org.commonjava.shelflife.model.ExpirationKey;
 import org.commonjava.util.logging.Logger;
 
-@Singleton
+@javax.enterprise.context.ApplicationScoped
 public class MemoryExpirationManager
     implements ExpirationManager
 {
