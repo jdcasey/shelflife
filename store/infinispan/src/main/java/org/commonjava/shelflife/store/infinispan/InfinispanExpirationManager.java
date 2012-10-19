@@ -6,12 +6,16 @@ import static org.commonjava.shelflife.expire.ExpirationEventType.SCHEDULE;
 import static org.commonjava.shelflife.store.infinispan.BlockKeyUtils.generateCurrentBlockKey;
 import static org.commonjava.shelflife.store.infinispan.BlockKeyUtils.generateNextBlockKey;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -45,10 +49,7 @@ public class InfinispanExpirationManager
     private static final long NEXT_EXPIRATION_BATCH_OFFSET =
         TimeUnit.MILLISECONDS.convert( NEXT_EXPIRATION_OFFSET_MINUTES, TimeUnit.MINUTES );
 
-    public static final int NEXT_PURGE_OFFSET_SECONDS = 5;
-
-    private static final long NEXT_PURGE_OFFSET = TimeUnit.MILLISECONDS.convert( NEXT_PURGE_OFFSET_SECONDS,
-                                                                                 TimeUnit.SECONDS );
+    private static final long MIN_PURGE_PERIOD = 500;
 
     public static final String BLOCK_CACHE_NAME = "shelflife-blocks";
 
@@ -79,7 +80,7 @@ public class InfinispanExpirationManager
     {
         timer.schedule( new LoadNextExpirationsTask(), 0, NEXT_EXPIRATION_BATCH_OFFSET );
 
-        timer.schedule( new PurgeExpiredTask(), 1000, NEXT_PURGE_OFFSET );
+        timer.schedule( new PurgeExpiredTask(), 0 );
     }
 
     @PreDestroy
@@ -106,6 +107,7 @@ public class InfinispanExpirationManager
             synchronized ( currentExpirations )
             {
                 currentExpirations.put( expiration.getKey(), expiration );
+                currentExpirations.notifyAll();
             }
             //            timer.schedule( new ExpirationTask( expiration ), expires );
         }
@@ -170,7 +172,10 @@ public class InfinispanExpirationManager
             }
         }
 
-        currentExpirations.remove( expiration.getKey() );
+        synchronized ( currentExpirations )
+        {
+            currentExpirations.remove( expiration.getKey() );
+        }
 
         expirationCache.remove( expiration.getKey() );
     }
@@ -180,7 +185,7 @@ public class InfinispanExpirationManager
         throws ExpirationManagerException
     {
         logger.info( "\n\n[%s] ATTEMPTING TRIGGER: %s\n\n", System.currentTimeMillis(), expiration.getKey() );
-        logger.debug( "Is expiration still active? If not, skip trigger! %s", expiration.isActive() );
+        //        logger.debug( "Is expiration still active? If not, skip trigger! %s", expiration.isActive() );
         if ( expiration.isActive() && contains( expiration ) )
         {
             expiration.expire();
@@ -270,6 +275,11 @@ public class InfinispanExpirationManager
                 //                    + " ms from now (@" + expiration.getExpires() + ")" );
                 //                timer.schedule( new ExpirationTask( expiration ), time );
             }
+
+            synchronized ( currentExpirations )
+            {
+                currentExpirations.notifyAll();
+            }
         }
     }
 
@@ -314,41 +324,64 @@ public class InfinispanExpirationManager
         {
             logger.info( "Purging expired entries." );
 
+            synchronized ( currentExpirations )
+            {
+                while ( currentExpirations.isEmpty() )
+                {
+                    try
+                    {
+                        logger.info( "Purge task waiting for expirations..." );
+                        currentExpirations.wait( TimeUnit.MILLISECONDS.convert( 10, TimeUnit.SECONDS ) );
+                    }
+                    catch ( final InterruptedException e )
+                    {
+                        logger.info( "Expiration purge task interrupted." );
+                        return;
+                    }
+                }
+            }
+
             Map<ExpirationKey, Expiration> current;
             synchronized ( currentExpirations )
             {
                 current = new HashMap<ExpirationKey, Expiration>( currentExpirations );
             }
 
-            final long time = System.currentTimeMillis();
             for ( final Map.Entry<ExpirationKey, Expiration> entry : current.entrySet() )
             {
                 final ExpirationKey key = entry.getKey();
                 final Expiration exp = entry.getValue();
 
-                logger.info( "Handling expiration for: %s", key );
+                //                logger.info( "Handling expiration for: %s", key );
 
                 boolean cancel = false;
                 if ( !exp.isActive() )
                 {
-                    logger.info( "Expiration no longer active: %s", exp );
+                    //                    logger.info( "Expiration no longer active: %s", exp );
                     cancel = true;
                     return;
                 }
 
+                boolean expired = false;
                 if ( !cancel )
                 {
-                    if ( exp.getExpires() < time )
+                    expired = exp.getExpires() <= System.currentTimeMillis();
+
+                    //                    logger.info( "Checking expiration: %s vs current time: %s. Expired? %s", exp.getExpires(),
+                    //                                 System.currentTimeMillis(), expired );
+
+                    if ( expired )
                     {
                         try
                         {
-                            logger.info( "\n\n\n [%s] TRIGGERING: %s (expiration timeout: %s)\n\n\n",
-                                         System.currentTimeMillis(), exp, exp.getExpires() );
+                            //                            logger.info( "\n\n\n [%s] TRIGGERING: %s (expiration timeout: %s)\n\n\n",
+                            //                                         System.currentTimeMillis(), exp, exp.getExpires() );
+
                             trigger( exp );
                         }
                         catch ( final ExpirationManagerException e )
                         {
-                            logger.error( "Timed trigger of: %s failed: %s", e, key, e.getMessage() );
+                            logger.error( "Failed to trigger expiration: %s. Reason: %s", e, key, e.getMessage() );
 
                             cancel = true;
                         }
@@ -357,14 +390,65 @@ public class InfinispanExpirationManager
 
                 if ( cancel )
                 {
+                    //                    logger.info( "Canceling: %s", key );
                     try
                     {
                         InfinispanExpirationManager.this.cancel( exp );
                     }
                     catch ( final ExpirationManagerException e )
                     {
-                        logger.error( "Cannot cancel expiration: %s. Reason: %s", e, key, e.getMessage() );
+                        logger.error( "Failed to cancel expiration: %s. Reason: %s", e, key, e.getMessage() );
                     }
+                }
+
+                if ( cancel || expired )
+                {
+                    synchronized ( currentExpirations )
+                    {
+                        //                        logger.info( "Removing handled expiration: %s", key );
+                        remove( exp );
+                        current.remove( key );
+                    }
+                }
+            }
+
+            if ( !current.isEmpty() )
+            {
+                final List<Expiration> remaining = new ArrayList<Expiration>( current.values() );
+                //                logger.info( "Sorting %d remaining expirations", remaining.size() );
+
+                Collections.sort( remaining, new Comparator<Expiration>()
+                {
+                    @Override
+                    public int compare( final Expiration one, final Expiration two )
+                    {
+                        return Long.valueOf( one.getExpires() )
+                                   .compareTo( two.getExpires() );
+                    }
+                } );
+
+                boolean scheduled = false;
+                for ( final Expiration exp : remaining )
+                {
+                    if ( exp.getExpires() > ( System.currentTimeMillis() + MIN_PURGE_PERIOD ) )
+                    {
+                        final long offset = exp.getExpires() - System.currentTimeMillis();
+
+                        logger.info( "Next purge in %d seconds.",
+                                     TimeUnit.SECONDS.convert( offset, TimeUnit.MILLISECONDS ) );
+
+                        timer.schedule( new PurgeExpiredTask(), offset );
+                        scheduled = true;
+                        break;
+                    }
+                }
+
+                if ( !scheduled )
+                {
+                    logger.info( "Next purge in: %d seconds.",
+                                 TimeUnit.SECONDS.convert( MIN_PURGE_PERIOD, TimeUnit.MILLISECONDS ) );
+
+                    timer.schedule( new PurgeExpiredTask(), MIN_PURGE_PERIOD );
                 }
             }
         }
@@ -397,12 +481,22 @@ public class InfinispanExpirationManager
             final Set<ExpirationKey> expirationKeys = expirationBlocks.get( key );
             if ( expirationKeys != null )
             {
-                for ( final ExpirationKey expirationKey : expirationKeys )
+                synchronized ( currentExpirations )
                 {
-                    final Expiration expiration = expirationCache.get( expirationKey );
-                    if ( !currentExpirations.containsKey( expiration ) )
+                    int added = 0;
+                    for ( final ExpirationKey expirationKey : expirationKeys )
                     {
-                        currentExpirations.put( expirationKey, expiration );
+                        final Expiration expiration = expirationCache.get( expirationKey );
+                        if ( !currentExpirations.containsKey( expiration ) )
+                        {
+                            currentExpirations.put( expirationKey, expiration );
+                            added++;
+                        }
+                    }
+
+                    if ( added > 0 )
+                    {
+                        currentExpirations.notifyAll();
                     }
                 }
             }
