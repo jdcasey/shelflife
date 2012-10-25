@@ -347,7 +347,8 @@ public class InfinispanExpirationManager
                 current = new HashMap<ExpirationKey, Expiration>( currentExpirations );
             }
 
-            for ( final Map.Entry<ExpirationKey, Expiration> entry : current.entrySet() )
+            for ( final Map.Entry<ExpirationKey, Expiration> entry : new HashSet<Map.Entry<ExpirationKey, Expiration>>(
+                                                                                                                        current.entrySet() ) )
             {
                 final ExpirationKey key = entry.getKey();
                 final Expiration exp = entry.getValue();
