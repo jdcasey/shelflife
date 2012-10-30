@@ -270,10 +270,6 @@ public class InfinispanExpirationManager
             else
             {
                 this.currentExpirations.put( expiration.getKey(), expiration );
-                //                final long time = expiration.getExpires() - System.currentTimeMillis();
-                //                System.out.println( " [" + System.currentTimeMillis() + "] Scheduling " + expiration + " for " + time
-                //                    + " ms from now (@" + expiration.getExpires() + ")" );
-                //                timer.schedule( new ExpirationTask( expiration ), time );
             }
 
             synchronized ( currentExpirations )
@@ -318,11 +314,12 @@ public class InfinispanExpirationManager
     public final class PurgeExpiredTask
         extends TimerTask
     {
+        private final Logger logger = new Logger( getClass() );
 
         @Override
         public void run()
         {
-            logger.info( "Purging expired entries." );
+            //            logger.info( "Purging expired entries." );
 
             synchronized ( currentExpirations )
             {
@@ -330,7 +327,7 @@ public class InfinispanExpirationManager
                 {
                     try
                     {
-                        logger.info( "Purge task waiting for expirations..." );
+                        //                        logger.info( "Purge task waiting for expirations..." );
                         currentExpirations.wait( TimeUnit.MILLISECONDS.convert( 10, TimeUnit.SECONDS ) );
                     }
                     catch ( final InterruptedException e )
@@ -458,20 +455,8 @@ public class InfinispanExpirationManager
     public final class LoadNextExpirationsTask
         extends TimerTask
     {
-        //        private final Cache<ExpirationKey, Expiration> expirationCache;
-        //
-        //        private final LinkedHashMap<ExpirationKey, Expiration> currentExpirations;
-        //
-        //        private final Cache<String, Set<ExpirationKey>> expirationBlocks;
-        //
-        //        LoadNextExpirationsTask( final Cache<String, Set<ExpirationKey>> expirationBlocks,
-        //                                 final Cache<ExpirationKey, Expiration> expirationCache,
-        //                                 final LinkedHashMap<ExpirationKey, Expiration> currentExpirations )
-        //        {
-        //            this.expirationBlocks = expirationBlocks;
-        //            this.expirationCache = expirationCache;
-        //            this.currentExpirations = currentExpirations;
-        //        }
+
+        private final Logger logger = new Logger( getClass() );
 
         @Override
         public void run()
@@ -503,58 +488,5 @@ public class InfinispanExpirationManager
             }
         }
     }
-
-    //    public final class ExpirationTask
-    //        extends TimerTask
-    //    {
-    //        private final Expiration expiration;
-    //
-    //        ExpirationTask( final Expiration exp )
-    //        {
-    //            this.expiration = exp;
-    //        }
-    //
-    //        @Override
-    //        public void run()
-    //        {
-    //            logger.info( "Handling expiration for: %s", expiration.getKey() );
-    //
-    //            boolean cancel = false;
-    //            if ( !expiration.isActive() )
-    //            {
-    //                logger.info( "Expiration no longer active: %s", expiration );
-    //                cancel = true;
-    //                return;
-    //            }
-    //
-    //            if ( !cancel )
-    //            {
-    //                try
-    //                {
-    //                    logger.info( "\n\n\n [%s] TRIGGERING: %s (expiration timeout: %s)\n\n\n",
-    //                                 System.currentTimeMillis(), expiration, expiration.getExpires() );
-    //                    trigger( expiration );
-    //                }
-    //                catch ( final ExpirationManagerException e )
-    //                {
-    //                    logger.error( "Timed trigger of: %s failed: %s", e, expiration.getKey(), e.getMessage() );
-    //
-    //                    cancel = true;
-    //                }
-    //            }
-    //
-    //            if ( cancel )
-    //            {
-    //                try
-    //                {
-    //                    InfinispanExpirationManager.this.cancel( expiration );
-    //                }
-    //                catch ( final ExpirationManagerException e )
-    //                {
-    //                    logger.error( "Cannot cancel expiration: %s. Reason: %s", e, expiration.getKey(), e.getMessage() );
-    //                }
-    //            }
-    //        }
-    //    }
 
 }
