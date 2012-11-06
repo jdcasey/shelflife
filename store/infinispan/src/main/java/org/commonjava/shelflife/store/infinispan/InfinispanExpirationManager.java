@@ -349,6 +349,10 @@ public class InfinispanExpirationManager
             {
                 final ExpirationKey key = entry.getKey();
                 final Expiration exp = entry.getValue();
+                if ( exp == null )
+                {
+                    continue;
+                }
 
                 //                logger.info( "Handling expiration for: %s", key );
 
