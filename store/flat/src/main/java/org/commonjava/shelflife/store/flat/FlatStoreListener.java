@@ -19,6 +19,7 @@ import org.commonjava.shelflife.expire.ExpirationEvent;
 import org.commonjava.shelflife.expire.ExpirationEventType;
 import org.commonjava.shelflife.expire.ExpirationManager;
 import org.commonjava.shelflife.expire.ExpirationManagerException;
+import org.commonjava.shelflife.inject.Shelflife;
 import org.commonjava.shelflife.model.Expiration;
 import org.commonjava.shelflife.util.ChangeSynchronizer;
 import org.commonjava.util.logging.Logger;
@@ -36,6 +37,7 @@ public class FlatStoreListener
     private ExpirationManager manager;
 
     @Inject
+    @Shelflife
     private JsonSerializer serializer;
 
     @Inject
