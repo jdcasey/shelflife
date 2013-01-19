@@ -493,4 +493,10 @@ public class InfinispanExpirationManager
         }
     }
 
+    @Override
+    public boolean hasExpiration( final ExpirationKey key )
+    {
+        return expirationCache.containsKey( key );
+    }
+
 }

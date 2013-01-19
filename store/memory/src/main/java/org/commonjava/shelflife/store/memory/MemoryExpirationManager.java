@@ -218,4 +218,10 @@ public class MemoryExpirationManager
         return expirations.containsKey( expiration.getKey() );
     }
 
+    @Override
+    public boolean hasExpiration( final ExpirationKey key )
+    {
+        return expirations.containsKey( key );
+    }
+
 }

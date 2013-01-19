@@ -123,7 +123,6 @@ public class FlatStoreListener
         f.delete();
     }
 
-    @SuppressWarnings( "unchecked" )
     private Set<Expiration> loadAll()
     {
         final File[] files = config.getStorageDirectory()

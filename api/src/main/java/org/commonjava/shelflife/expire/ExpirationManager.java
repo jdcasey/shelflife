@@ -42,4 +42,6 @@ public interface ExpirationManager
     void loadedFromStorage( Collection<Expiration> expirations )
         throws ExpirationManagerException;
 
+    boolean hasExpiration( ExpirationKey key );
+
 }
