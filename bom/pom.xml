@@ -9,6 +9,27 @@
 
   <name>Shelf-Life :: Bill of Materials</name>
 
+  <licenses>
+    <license>
+      <name>GPLv3</name>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  
+  <developers>
+    <developer>
+      <id>jdcasey</id>
+      <email>jdcasey@commonjava.org</email>
+      <name>John Casey</name>
+    </developer>
+  </developers>
+  
+  <scm>
+    <connection>scm:git:http://jdcasey@github.com/jdcasey/shelflife.git</connection>
+    <developerConnection>scm:git:git@github.com:jdcasey/shelflife.git</developerConnection>
+    <url>http://github.com/jdcasey/shelflife</url>
+  </scm>
+  
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
