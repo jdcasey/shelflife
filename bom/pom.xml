@@ -4,7 +4,7 @@
 
   <groupId>org.commonjava.shelflife</groupId>
   <artifactId>shelflife-bom</artifactId>
-  <version>0.2</version>
+  <version>0.3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Shelf-Life :: Bill of Materials</name>
@@ -18,33 +18,33 @@
       <dependency>
         <groupId>org.commonjava.shelflife</groupId>
         <artifactId>shelflife-api</artifactId>
-        <version>0.2</version>
+        <version>0.3-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.commonjava.shelflife</groupId>
         <artifactId>shelflife-core</artifactId>
-        <version>0.2</version>
+        <version>0.3-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.commonjava.shelflife</groupId>
         <artifactId>shelflife-core-tck</artifactId>
-        <version>0.2</version>
+        <version>0.3-SNAPSHOT</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.commonjava.shelflife</groupId>
         <artifactId>shelflife-filer</artifactId>
-        <version>0.2</version>
+        <version>0.3-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.commonjava.shelflife</groupId>
         <artifactId>shelflife-store-memory</artifactId>
-        <version>0.2</version>
+        <version>0.3-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.commonjava.shelflife</groupId>
         <artifactId>shelflife-store-flat</artifactId>
-        <version>0.2</version>
+        <version>0.3-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.commonjava.shelflife</groupId>
@@ -54,7 +54,7 @@
       <dependency>
         <groupId>org.commonjava.shelflife</groupId>
         <artifactId>shelflife-store-infinispan</artifactId>
-        <version>0.2</version>
+        <version>0.3-SNAPSHOT</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
