@@ -3,7 +3,7 @@ package org.commonjava.shelflife.model;
 import java.io.Serializable;
 
 public final class Expiration
-    implements Serializable
+    implements Serializable, Comparable<Expiration>
 {
 
     private static final long serialVersionUID = 1L;
@@ -121,6 +121,13 @@ public final class Expiration
             return false;
         }
         return true;
+    }
+
+    @Override
+    public int compareTo( final Expiration other )
+    {
+        final Long exp = expires;
+        return exp.compareTo( other.expires );
     }
 
 }

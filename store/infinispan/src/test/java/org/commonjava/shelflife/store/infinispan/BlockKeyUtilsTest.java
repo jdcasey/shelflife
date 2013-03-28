@@ -3,6 +3,7 @@ package org.commonjava.shelflife.store.infinispan;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
+import org.commonjava.shelflife.util.BlockKeyUtils;
 import org.junit.Test;
 
 public class BlockKeyUtilsTest
@@ -18,7 +19,7 @@ public class BlockKeyUtilsTest
     @Test
     public void generateNextBlockKey_CurrentTime()
     {
-        final String blockKey = BlockKeyUtils.generateNextBlockKey( System.currentTimeMillis() );
+        final String blockKey = BlockKeyUtils.generateBlockKey( System.currentTimeMillis() );
         System.out.println( blockKey );
     }
 
@@ -26,7 +27,7 @@ public class BlockKeyUtilsTest
     public void nextBlockKeyOffsetByOneFromCurrent()
     {
         final String current = BlockKeyUtils.generateCurrentBlockKey();
-        final String next = BlockKeyUtils.generateNextBlockKey( System.currentTimeMillis() );
+        final String next = BlockKeyUtils.generateBlockKey( System.currentTimeMillis() );
 
         int idx = current.indexOf( '-' );
         final String currentBlock = current.substring( idx + 1 );

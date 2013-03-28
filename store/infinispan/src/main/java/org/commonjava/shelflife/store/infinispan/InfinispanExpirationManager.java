@@ -3,8 +3,8 @@ package org.commonjava.shelflife.store.infinispan;
 import static org.commonjava.shelflife.expire.ExpirationEventType.CANCEL;
 import static org.commonjava.shelflife.expire.ExpirationEventType.EXPIRE;
 import static org.commonjava.shelflife.expire.ExpirationEventType.SCHEDULE;
-import static org.commonjava.shelflife.store.infinispan.BlockKeyUtils.generateCurrentBlockKey;
-import static org.commonjava.shelflife.store.infinispan.BlockKeyUtils.generateNextBlockKey;
+import static org.commonjava.shelflife.util.BlockKeyUtils.generateBlockKey;
+import static org.commonjava.shelflife.util.BlockKeyUtils.generateCurrentBlockKey;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -112,7 +112,7 @@ public class InfinispanExpirationManager
             //            timer.schedule( new ExpirationTask( expiration ), expires );
         }
 
-        final String blockKey = generateNextBlockKey( expires );
+        final String blockKey = generateBlockKey( expires );
         Set<ExpirationKey> keySet = expirationBlocks.get( blockKey );
         if ( keySet == null )
         {
@@ -160,7 +160,7 @@ public class InfinispanExpirationManager
 
     private synchronized void remove( final Expiration expiration )
     {
-        final String blockKey = generateNextBlockKey( expiration.getExpires() );
+        final String blockKey = generateBlockKey( expiration.getExpires() );
         final Set<ExpirationKey> keySet = expirationBlocks.get( blockKey );
         if ( keySet != null )
         {
@@ -497,6 +497,13 @@ public class InfinispanExpirationManager
     public boolean hasExpiration( final ExpirationKey key )
     {
         return expirationCache.containsKey( key );
+    }
+
+    @Override
+    public void clearExpired()
+    {
+        // TODO Auto-generated method stub
+
     }
 
 }
