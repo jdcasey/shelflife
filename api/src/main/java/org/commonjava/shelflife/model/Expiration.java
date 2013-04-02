@@ -2,9 +2,14 @@ package org.commonjava.shelflife.model;
 
 import java.io.Serializable;
 
+import org.commonjava.shelflife.event.ExpirationEventType;
+import org.commonjava.util.logging.Logger;
+
 public final class Expiration
     implements Serializable, Comparable<Expiration>
 {
+
+    private final transient Logger logger = new Logger( getClass() );
 
     private static final long serialVersionUID = 1L;
 
@@ -18,13 +23,16 @@ public final class Expiration
 
     private transient boolean canceled = false;
 
+    private transient ExpirationEventType lastType;
+
     public Expiration( final ExpirationKey key, final long expires, final Object data )
     {
         this.key = key;
         final long current = System.currentTimeMillis();
         this.expires = expires < current ? expires + current : expires;
-        System.out.println( "[" + current + "] Expire given as: " + expires + ", actual expires set to: "
-            + this.expires );
+
+        logger.debug( "[%d] Expire given as: %d, actual expires set to: %s", current, expires, this.expires );
+
         this.data = data;
     }
 
@@ -40,6 +48,19 @@ public final class Expiration
         this.expires = 0;
         this.data = null;
         this.active = false;
+    }
+
+    public ExpirationEventType getLastEventType()
+    {
+        return lastType;
+    }
+
+    public ExpirationEventType setLastEventType( final ExpirationEventType type )
+    {
+        final ExpirationEventType t = lastType;
+        lastType = type;
+
+        return t;
     }
 
     public ExpirationKey getKey()
@@ -62,15 +83,22 @@ public final class Expiration
         return canceled;
     }
 
+    public void schedule()
+    {
+        this.lastType = ExpirationEventType.SCHEDULE;
+    }
+
     public void expire()
     {
         active = false;
+        lastType = ExpirationEventType.EXPIRE;
     }
 
     public void cancel()
     {
         active = false;
         canceled = true;
+        lastType = ExpirationEventType.CANCEL;
     }
 
     public Object getData()
@@ -127,7 +155,13 @@ public final class Expiration
     public int compareTo( final Expiration other )
     {
         final Long exp = expires;
-        return exp.compareTo( other.expires );
+        int comp = exp.compareTo( other.expires );
+        if ( comp == 0 )
+        {
+            comp = key.compareTo( other.key );
+        }
+
+        return comp;
     }
 
 }

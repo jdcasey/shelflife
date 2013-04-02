@@ -3,7 +3,7 @@ package org.commonjava.shelflife.store;
 import java.util.Map;
 import java.util.Set;
 
-import org.commonjava.shelflife.expire.ExpirationManagerException;
+import org.commonjava.shelflife.ExpirationManagerException;
 import org.commonjava.shelflife.model.Expiration;
 
 public interface ExpirationBlockStore

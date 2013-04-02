@@ -8,15 +8,15 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import org.commonjava.shelflife.expire.ExpirationManagerException;
+import org.commonjava.shelflife.ExpirationManagerException;
 import org.commonjava.shelflife.inject.Shelflife;
 import org.commonjava.shelflife.model.Expiration;
 import org.commonjava.shelflife.store.ExpirationBlockStore;
@@ -36,7 +36,17 @@ public class FlatBlockStore
     private JsonSerializer serializer;
 
     @Inject
-    private FlatShelflifeStoreConfiguration config;
+    private FlatBlockStoreConfiguration config;
+
+    public FlatBlockStore()
+    {
+    }
+
+    public FlatBlockStore( final FlatBlockStoreConfiguration config, final JsonSerializer serializer )
+    {
+        this.config = config;
+        this.serializer = serializer;
+    }
 
     @Override
     public void writeBlocks( final Map<String, Set<Expiration>> currentBlocks )
@@ -73,11 +83,10 @@ public class FlatBlockStore
 
                 final TypeToken<List<Expiration>> token = new TypeToken<List<Expiration>>()
                 {
-
                 };
 
                 final List<Expiration> listing = serializer.fromStream( stream, ENCODING, token );
-                return listing == null ? null : new LinkedHashSet<Expiration>( listing );
+                return listing == null ? null : new TreeSet<Expiration>( listing );
             }
             catch ( final IOException e )
             {

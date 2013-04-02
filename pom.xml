@@ -47,7 +47,7 @@
       </dependency>
       <dependency>
         <groupId>org.commonjava.shelflife</groupId>
-        <artifactId>shelflife-core-tck</artifactId>
+        <artifactId>shelflife-tck-store</artifactId>
         <version>0.3-SNAPSHOT</version>
         <scope>test</scope>
       </dependency>
@@ -135,8 +135,9 @@
       <artifactId>weft</artifactId>
     </dependency>
     <dependency>
-      <groupId>javax</groupId>
-      <artifactId>javaee-api</artifactId>
+      <groupId>org.jboss.spec</groupId>
+      <artifactId>jboss-javaee-6.0</artifactId>
+      <type>pom</type>
     </dependency>
   </dependencies>
   
@@ -271,9 +272,8 @@
   <modules>
     <module>api</module>
     <module>core</module>
-    <module>filer</module>
     <module>store</module>
-    <module>core-tck</module>
+    <module>tck</module>
     <module>bom</module>
   </modules>
 </project>

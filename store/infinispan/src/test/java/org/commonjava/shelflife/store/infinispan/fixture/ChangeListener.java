@@ -5,8 +5,8 @@ import java.util.Set;
 
 import javax.enterprise.event.Observes;
 
-import org.commonjava.shelflife.expire.ExpirationEvent;
-import org.commonjava.shelflife.expire.ExpirationEventType;
+import org.commonjava.shelflife.event.ExpirationEvent;
+import org.commonjava.shelflife.event.ExpirationEventType;
 import org.commonjava.shelflife.model.Expiration;
 import org.commonjava.shelflife.util.ChangeSynchronizer;
 import org.commonjava.util.logging.Logger;

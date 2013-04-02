@@ -7,28 +7,37 @@
     <version>0.3-SNAPSHOT</version>
   </parent>
 
-  <artifactId>shelflife-api</artifactId>
-  <name>Shelf-Life :: API</name>
+  <artifactId>shelflife-tcks</artifactId>
+  <packaging>pom</packaging>
+  <name>Shelf-Life :: TCKs</name>
 
   <dependencies>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
+      <groupId>org.commonjava.shelflife</groupId>
+      <artifactId>shelflife-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.weld.se</groupId>
+      <artifactId>weld-se-core</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
     </dependency>
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
       <version>1.2.16</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-      <scope>test</scope>
     </dependency>
   </dependencies>
+  
+  <modules>
+    <module>store</module>
+  </modules>
 </project>

@@ -3,7 +3,7 @@ package org.commonjava.shelflife.util;
 import java.util.Calendar;
 import java.util.Date;
 
-import org.commonjava.shelflife.expire.ExpirationManager;
+import org.commonjava.shelflife.ExpirationManager;
 
 public final class BlockKeyUtils
 {
@@ -19,7 +19,7 @@ public final class BlockKeyUtils
 
     public static String generateBlockKey( final long d )
     {
-        return generateBlockKey( d, true );
+        return generateBlockKey( d, false );
     }
 
     public static Date getNextBlockStart( final long d )

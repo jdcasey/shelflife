@@ -24,10 +24,6 @@
       <artifactId>shelflife-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.commonjava.shelflife</groupId>
-      <artifactId>shelflife-core-tck</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.jboss.weld.se</groupId>
       <artifactId>weld-se-core</artifactId>
       <scope>test</scope>
@@ -45,6 +41,11 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.commonjava.shelflife</groupId>
+      <artifactId>shelflife-store-memory</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>
