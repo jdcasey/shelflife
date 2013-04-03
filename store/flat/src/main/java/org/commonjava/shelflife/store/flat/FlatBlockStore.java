@@ -62,7 +62,12 @@ public class FlatBlockStore
     public void addToBlock( final String key, final Expiration expiration )
         throws ExpirationManagerException
     {
-        final Set<Expiration> block = getBlock( key );
+        Set<Expiration> block = getBlock( key );
+        if ( block == null )
+        {
+            block = new TreeSet<Expiration>();
+        }
+
         if ( block.add( expiration ) )
         {
             writeBlock( key, block );
