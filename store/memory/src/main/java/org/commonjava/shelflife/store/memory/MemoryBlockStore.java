@@ -87,4 +87,11 @@ public class MemoryBlockStore
         return block;
     }
 
+    @Override
+    public void flushCaches()
+        throws ExpirationManagerException
+    {
+        // NOP, we're all cache here, baby!
+    }
+
 }

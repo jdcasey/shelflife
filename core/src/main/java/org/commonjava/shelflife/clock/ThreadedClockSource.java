@@ -8,6 +8,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.commonjava.cdi.util.weft.ExecutorConfig;
+import org.commonjava.cdi.util.weft.PeriodicRunnable;
 import org.commonjava.shelflife.ExpirationManager;
 import org.commonjava.shelflife.ExpirationManagerException;
 import org.commonjava.util.logging.Logger;
@@ -67,86 +68,23 @@ public class ThreadedClockSource
     }
 
     private final class Clock
-        implements Runnable
+        extends PeriodicRunnable
     {
         private final Logger logger = new Logger( getClass() );
 
         private final ExpirationManager manager;
 
-        private boolean wait;
-
-        private long lastSkew = 0;
-
-        private boolean stop = false;
-
-        private Thread myThread;
-
         private Clock( final ExpirationManager manager, final boolean wait )
         {
+            super( period, wait, executor );
             this.manager = manager;
-            this.wait = wait;
-        }
-
-        public synchronized void stop()
-        {
-            logger.debug( "setting stop flag on clock" );
-            stop = true;
-            if ( myThread != null )
-            {
-                logger.debug( "interrupting current clock thread: %s", myThread );
-                myThread.interrupt();
-            }
         }
 
         @Override
-        public void run()
+        protected void onPeriodExpire()
         {
-            if ( stop )
-            {
-                logger.debug( "stopping clock" );
-                return;
-            }
-
-            synchronized ( this )
-            {
-                myThread = Thread.currentThread();
-            }
-
-            boolean abort = false;
-            if ( wait )
-            {
-                try
-                {
-                    logger.debug( "sleeping for wait period of %d ms minus skew of: %d", period, lastSkew );
-                    Thread.sleep( period - lastSkew );
-                }
-                catch ( final InterruptedException e )
-                {
-                    abort = true;
-                }
-            }
-
-            final long start = System.currentTimeMillis();
-
-            if ( abort )
-            {
-                logger.debug( "aborting clock due to interruption." );
-                return;
-            }
-
             logger.debug( "Clearing expired from: %s", manager );
             manager.clearExpired();
-
-            wait = true;
-            logger.debug( "priming for next tick: %s", this );
-            lastSkew = System.currentTimeMillis() - start;
-
-            synchronized ( this )
-            {
-                myThread = null;
-            }
-
-            executor.execute( this );
         }
     }
 

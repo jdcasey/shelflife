@@ -53,6 +53,8 @@ public abstract class ExpirationBlockStoreTCK
         final ExpirationBlockStore store = getStore();
         store.writeBlocks( blocks );
 
+        store.flushCaches();
+
         final Set<Expiration> block = store.getBlock( key );
 
         assertThat( block.size(), equalTo( 2 ) );
@@ -81,6 +83,8 @@ public abstract class ExpirationBlockStoreTCK
 
         logger.debug( "storing blocks: %s", blocks );
         store.writeBlocks( blocks );
+
+        store.flushCaches();
 
         final Set<Expiration> block = store.getBlock( key );
 
@@ -121,7 +125,11 @@ public abstract class ExpirationBlockStoreTCK
         logger.debug( "storing blocks: %s", blocks );
         store.writeBlocks( blocks );
 
+        store.flushCaches();
+
         store.addToBlock( key, e2 );
+
+        store.flushCaches();
 
         final Set<Expiration> block = store.getBlock( key );
 
@@ -159,12 +167,16 @@ public abstract class ExpirationBlockStoreTCK
         logger.debug( "storing blocks: %s", blocks );
         store.writeBlocks( blocks );
 
+        store.flushCaches();
+
         Set<Expiration> block = store.getBlock( key );
 
         logger.debug( "For key: %s, retrieved block: %s", key, block );
         assertThat( block.size(), equalTo( 2 ) );
 
         store.removeFromBlock( key, e2 );
+
+        store.flushCaches();
 
         block = store.getBlock( key );
 
@@ -194,12 +206,16 @@ public abstract class ExpirationBlockStoreTCK
         logger.debug( "storing blocks: %s", blocks );
         store.writeBlocks( blocks );
 
+        store.flushCaches();
+
         Set<Expiration> block = store.getBlock( key );
 
         logger.debug( "For key: %s, retrieved block: %s", key, block );
         assertThat( block.size(), equalTo( 2 ) );
 
         store.removeBlocks( key );
+
+        store.flushCaches();
 
         block = store.getBlock( key );
 
@@ -254,6 +270,8 @@ public abstract class ExpirationBlockStoreTCK
         logger.debug( "storing blocks: %s", blocks );
         store.writeBlocks( blocks );
 
+        store.flushCaches();
+
         Set<Expiration> block = store.getBlock( key );
 
         logger.debug( "For key: %s, retrieved block: %s", key, block );
@@ -270,6 +288,8 @@ public abstract class ExpirationBlockStoreTCK
         assertThat( block.size(), equalTo( 2 ) );
 
         store.removeBlocks( toRemove );
+
+        store.flushCaches();
 
         block = store.getBlock( key );
 

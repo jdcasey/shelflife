@@ -1,5 +1,7 @@
 package org.commonjava.shelflife.store.flat;
 
+import java.util.concurrent.Executors;
+
 import org.commonjava.shelflife.ExpirationBlockStoreTCK;
 import org.commonjava.shelflife.store.ExpirationBlockStore;
 import org.commonjava.web.json.ser.JsonSerializer;
@@ -24,7 +26,7 @@ public class FlatExpirationBlockStoreTest
 
         final JsonSerializer serializer = new JsonSerializer();
 
-        store = new FlatBlockStore( config, serializer );
+        store = new FlatBlockStore( config, serializer, Executors.newFixedThreadPool( 1 ) );
     }
 
     @Override

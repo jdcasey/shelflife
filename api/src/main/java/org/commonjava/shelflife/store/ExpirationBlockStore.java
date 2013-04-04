@@ -27,4 +27,6 @@ public interface ExpirationBlockStore
     void removeBlocks( String... currentKeys )
         throws ExpirationManagerException;
 
+    void flushCaches()
+        throws ExpirationManagerException;
 }

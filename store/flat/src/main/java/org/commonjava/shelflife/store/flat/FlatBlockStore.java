@@ -8,14 +8,21 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.Executor;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import org.commonjava.cdi.util.weft.ExecutorConfig;
+import org.commonjava.cdi.util.weft.PeriodicRunnable;
 import org.commonjava.shelflife.ExpirationManagerException;
 import org.commonjava.shelflife.inject.Shelflife;
 import org.commonjava.shelflife.model.Expiration;
@@ -38,14 +45,29 @@ public class FlatBlockStore
     @Inject
     private FlatBlockStoreConfiguration config;
 
+    @Inject
+    @ExecutorConfig( daemon = true, named = "shelflife-flushcache", threads = 1, priority = 6 )
+    private Executor executor;
+
+    private final Map<String, Set<Expiration>> cache = new HashMap<String, Set<Expiration>>();
+
     public FlatBlockStore()
     {
     }
 
-    public FlatBlockStore( final FlatBlockStoreConfiguration config, final JsonSerializer serializer )
+    public FlatBlockStore( final FlatBlockStoreConfiguration config, final JsonSerializer serializer,
+                           final Executor executor )
     {
         this.config = config;
         this.serializer = serializer;
+        this.executor = executor;
+        startCacheManager();
+    }
+
+    @PostConstruct
+    public void startCacheManager()
+    {
+        executor.execute( new CacheFlusher( config.getCacheFlushMillis(), executor ) );
     }
 
     @Override
@@ -54,7 +76,7 @@ public class FlatBlockStore
     {
         for ( final Map.Entry<String, Set<Expiration>> entry : currentBlocks.entrySet() )
         {
-            writeBlock( entry.getKey(), entry.getValue() );
+            putBlock( entry.getKey(), entry.getValue() );
         }
     }
 
@@ -70,7 +92,7 @@ public class FlatBlockStore
 
         if ( block.add( expiration ) )
         {
-            writeBlock( key, block );
+            putBlock( key, block );
         }
     }
 
@@ -78,32 +100,37 @@ public class FlatBlockStore
     public Set<Expiration> getBlock( final String key )
         throws ExpirationManagerException
     {
-        final File f = getBlockFile( key );
-        if ( f.exists() )
+        Set<Expiration> block = cache.get( key );
+        if ( block == null )
         {
-            FileInputStream stream = null;
-            try
+            final File f = getBlockFile( key );
+            if ( f.exists() )
             {
-                stream = new FileInputStream( f );
-
-                final TypeToken<List<Expiration>> token = new TypeToken<List<Expiration>>()
+                FileInputStream stream = null;
+                try
                 {
-                };
+                    stream = new FileInputStream( f );
 
-                final List<Expiration> listing = serializer.fromStream( stream, ENCODING, token );
-                return listing == null ? null : new TreeSet<Expiration>( listing );
-            }
-            catch ( final IOException e )
-            {
-                throw new ExpirationManagerException( "Failed to read block from: %s. Reason: %s", e, f, e.getMessage() );
-            }
-            finally
-            {
-                closeQuietly( stream );
+                    final TypeToken<List<Expiration>> token = new TypeToken<List<Expiration>>()
+                    {
+                    };
+
+                    final List<Expiration> listing = serializer.fromStream( stream, ENCODING, token );
+                    block = new TreeSet<Expiration>( listing );
+                }
+                catch ( final IOException e )
+                {
+                    throw new ExpirationManagerException( "Failed to read block from: %s. Reason: %s", e, f,
+                                                          e.getMessage() );
+                }
+                finally
+                {
+                    closeQuietly( stream );
+                }
             }
         }
 
-        return null;
+        return block;
     }
 
     @Override
@@ -113,7 +140,25 @@ public class FlatBlockStore
         final Set<Expiration> block = getBlock( key );
         if ( block != null && block.remove( expiration ) )
         {
+            putBlock( key, block );
+        }
+    }
+
+    private void putBlock( final String key, final Set<Expiration> block )
+    {
+        cache.put( key, block );
+    }
+
+    @PreDestroy
+    public synchronized void flushCaches()
+        throws ExpirationManagerException
+    {
+        final Set<String> keys = new HashSet<String>( cache.keySet() );
+        for ( final String key : keys )
+        {
+            final Set<Expiration> block = cache.get( key );
             writeBlock( key, block );
+            cache.remove( key );
         }
     }
 
@@ -155,6 +200,7 @@ public class FlatBlockStore
     {
         for ( final String key : currentKeys )
         {
+            cache.remove( key );
             final File f = getBlockFile( key );
             if ( f.exists() )
             {
@@ -169,6 +215,7 @@ public class FlatBlockStore
     {
         for ( final String key : currentKeys )
         {
+            cache.remove( key );
             final File f = getBlockFile( key );
             if ( f.exists() )
             {
@@ -185,5 +232,29 @@ public class FlatBlockStore
               .mkdirs();
 
         return new File( config.getStorageDirectory(), fname );
+    }
+
+    private final class CacheFlusher
+        extends PeriodicRunnable
+    {
+        public CacheFlusher( final long period, final Executor executor )
+        {
+            super( period, true, executor );
+        }
+
+        @Override
+        protected void onPeriodExpire()
+        {
+            try
+            {
+                logger.debug( "Flushing block caches to disk." );
+                flushCaches();
+            }
+            catch ( final ExpirationManagerException e )
+            {
+                logger.error( "Failed to write cached blocks to disk: %s", e, e.getMessage() );
+            }
+        }
+
     }
 }
