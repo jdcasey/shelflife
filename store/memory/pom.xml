@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.commonjava.shelflife</groupId>
     <artifactId>shelflife-stores</artifactId>
-    <version>0.3-SNAPSHOT</version>
+    <version>0.3</version>
   </parent>
 
   <artifactId>shelflife-store-memory</artifactId>
