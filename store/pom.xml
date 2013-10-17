@@ -28,18 +28,7 @@
   
   <modules>
     <module>memory</module>
-    <!-- <module>couch</module> -->
     <module>flat</module>
   </modules>
   
-  <profiles>
-    <profile>
-      <id>mothballed</id>
-      
-      <modules>
-        <module>infinispan</module>
-        <module>couch</module>
-      </modules>
-    </profile>
-  </profiles>
 </project>

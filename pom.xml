@@ -3,9 +3,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
+    <groupId>org.commonjava</groupId>
+    <artifactId>commonjava</artifactId>
+    <version>2</version>
   </parent>
   
   <groupId>org.commonjava.shelflife</groupId>
@@ -21,18 +21,6 @@
     <url>http://github.com/jdcasey/shelflife</url>
   </scm>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-
-  <distributionManagement>
-    <snapshotRepository>
-      <id>local-snapshots</id>
-      <name>Local Snapshots</name>
-      <url>http://localhost:9080/aprox/api/1.0/group/public/</url>
-    </snapshotRepository>
-  </distributionManagement>
-  
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -66,23 +54,19 @@
         <artifactId>shelflife-store-flat</artifactId>
         <version>0.4-SNAPSHOT</version>
       </dependency>
-      <dependency>
-        <groupId>org.commonjava.shelflife</groupId>
-        <artifactId>shelflife-store-couch</artifactId>
-        <version>0.2-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>org.commonjava.shelflife</groupId>
-        <artifactId>shelflife-store-infinispan</artifactId>
-        <version>0.3-SNAPSHOT</version>
-      </dependency>
       
       <dependency>
         <groupId>org.commonjava.boms</groupId>
         <artifactId>web-commons-bom</artifactId>
-        <version>4</version>
+        <version>5</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      
+      <dependency>
+        <groupId>log4j</groupId>
+        <artifactId>log4j</artifactId>
+        <version>1.2.16</version>
       </dependency>
       
       <dependency>
@@ -91,27 +75,11 @@
         <version>1.1.3.Final</version>
         <scope>test</scope>
       </dependency>
-      
-      <!-- <dependency>
-        <groupId>org.commonjava.couch</groupId>
-        <artifactId>couch-java-parent</artifactId>
-        <version>1.1</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency> -->
-      
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>4.8.2</version>
         <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.infinispan</groupId>
-        <artifactId>infinispan-core</artifactId>
-        <version>5.1.7.Final</version>
-        <!-- expected to be present in AS7...may need to re-add for different deployment scenarios -->
-        <scope>provided</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -193,88 +161,15 @@
           </executions>
         </plugin>
         <plugin>
-          <artifactId>maven-assembly-plugin</artifactId>
-          <version>2.2.1</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>2.3.2</version>
-          <configuration>
-            <source>1.6</source>
-            <target>1.6</target>
-          </configuration>
-        </plugin>
-        <plugin>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.12</version>
-          <configuration>
-            <excludes>
-              <exclude>**/fixture/*.java</exclude>
-              <exclude>**/live/*.java</exclude>
-            </excludes>
-          </configuration>
-        </plugin>
-        <plugin>
-          <artifactId>maven-failsafe-plugin</artifactId>
-          <version>2.12</version>
-          <configuration>
-            <excludes>
-              <exclude>**/fixture/*.java</exclude>
-            </excludes>
-            <includes>
-              <include>**/live/*.java</include>
-            </includes>
-          </configuration>
-          <executions>
-            <execution>
-              <id>integration-tests</id>
-              <goals>
-                <goal>integration-test</goal>
-                <goal>verify</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-        <plugin>
           <artifactId>maven-war-plugin</artifactId>
           <version>2.1.1</version>
         </plugin>
         <plugin>
-          <artifactId>maven-release-plugin</artifactId>
-          <version>2.2.1</version>
-          <configuration>
-            <autoVersionSubmodules>true</autoVersionSubmodules>
-          </configuration>
-        </plugin>
-        <plugin>
-          <artifactId>maven-javadoc-plugin</artifactId>
-          <version>2.8.1</version>
-          <configuration>
-            <detectOfflineLinks>false</detectOfflineLinks>
-          </configuration>
-        </plugin>
-        <plugin>
           <groupId>org.commonjava.maven.plugins</groupId>
           <artifactId>qarqas-maven-plugin</artifactId>
-          <version>0.2</version>
-          <executions>
-            <execution>
-              <id>infra</id>
-              <goals>
-                <goal>setup</goal>
-                <goal>teardown</goal>
-              </goals>
-              <configuration>
-                <clientKey>couch</clientKey>
-                <configurators>reservation</configurators>
-                <useDefaultConfigurators>false</useDefaultConfigurators>
-                <output>${session.executionRootDirectory}/target/jbossas</output>
-                <configProperties>
-                  <reservationBaseUrl>http://localhost:9080/qarqas/api/1.0/reservation/</reservationBaseUrl>
-                </configProperties>
-              </configuration>
-            </execution>
-          </executions>
+          <configuration>
+            <clientKey>shelflife</clientKey>
+          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>

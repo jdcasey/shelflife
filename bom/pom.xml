@@ -9,6 +9,10 @@
 
   <name>Shelf-Life :: Bill of Materials</name>
 
+  <description>Curated list of dependencies provided by shelflife.</description>
+  
+  <url>http://github.com/jdcasey/shelflife</url>
+  
   <licenses>
     <license>
       <name>GPLv3</name>
@@ -135,7 +139,7 @@
 
   <profiles>
     <profile>
-      <id>release</id>
+      <id>shelflife-release</id>
       <build>
         <plugins>
           <plugin>
