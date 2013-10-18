@@ -8,7 +8,6 @@ import javax.enterprise.inject.Alternative;
 
 import org.commonjava.shelflife.ExpirationManager;
 import org.commonjava.shelflife.ExpirationManagerException;
-import org.commonjava.shelflife.clock.ExpirationClockSource;
 import org.commonjava.util.logging.Logger;
 
 @Alternative
@@ -39,13 +38,11 @@ public class TimerClockSource
     {
         if ( clock != null )
         {
-            throw new RuntimeException( "Cannot start with expiration manager: " + manager
-                + ". This clock source is already started!" );
+            throw new RuntimeException( "Cannot start with expiration manager: " + manager + ". This clock source is already started!" );
         }
 
         logger.debug( "Starting clock for manager: %s, period: %s", manager, period );
 
-        manager.loadNextExpirations();
         clock = new Clock( manager );
         timer.schedule( clock, 0, period );
     }

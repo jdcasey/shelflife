@@ -7,7 +7,6 @@ import javax.enterprise.inject.Alternative;
 
 import org.commonjava.shelflife.ExpirationManager;
 import org.commonjava.shelflife.ExpirationManagerException;
-import org.commonjava.shelflife.clock.ExpirationClockSource;
 
 @ApplicationScoped
 @ManagedBean
@@ -32,7 +31,6 @@ public class JEEClockSource
         throws ExpirationManagerException
     {
         this.manager = manager;
-        manager.loadNextExpirations();
     }
 
     @Override
