@@ -35,7 +35,7 @@ public class DefaultExpirationManager
 {
     private final Logger logger = new Logger( getClass() );
 
-    private final LinkedHashSet<Expiration> expirations = new LinkedHashSet<Expiration>();
+    private final Set<Expiration> expirations = new TreeSet<>();
 
     private final Set<String> currentKeys = new HashSet<String>();
 
@@ -52,8 +52,7 @@ public class DefaultExpirationManager
     {
     }
 
-    public DefaultExpirationManager( final ExpirationBlockStore store, final ExpirationClockSource clock,
-                                     final ExpirationEventManager events )
+    public DefaultExpirationManager( final ExpirationBlockStore store, final ExpirationClockSource clock, final ExpirationEventManager events )
         throws ExpirationManagerException
     {
         this.store = store;
@@ -89,7 +88,7 @@ public class DefaultExpirationManager
             Set<Expiration> block = currentBlocks.get( key );
             if ( block == null )
             {
-                block = new LinkedHashSet<Expiration>();
+                block = new TreeSet<Expiration>();
                 currentBlocks.put( key, block );
             }
 
@@ -213,7 +212,7 @@ public class DefaultExpirationManager
     public synchronized void triggerAll()
         throws ExpirationManagerException
     {
-        for ( final Expiration exp : new LinkedHashSet<Expiration>( expirations ) )
+        for ( final Expiration exp : new TreeSet<Expiration>( expirations ) )
         {
             trigger( exp );
         }
@@ -236,7 +235,7 @@ public class DefaultExpirationManager
     public synchronized void cancelAll()
         throws ExpirationManagerException
     {
-        for ( final Expiration exp : new LinkedHashSet<Expiration>( expirations ) )
+        for ( final Expiration exp : new TreeSet<Expiration>( expirations ) )
         {
             cancel( exp );
         }
@@ -400,15 +399,13 @@ public class DefaultExpirationManager
             {
                 expired = exp.getExpires() <= System.currentTimeMillis();
 
-                logger.debug( "Checking expiration: %s vs current time: %s. Expired? %s", exp.getExpires(),
-                              System.currentTimeMillis(), expired );
+                logger.debug( "Checking expiration: %s vs current time: %s. Expired? %s", exp.getExpires(), System.currentTimeMillis(), expired );
 
                 if ( expired )
                 {
                     try
                     {
-                        logger.debug( "\n\n\n [%s] TRIGGERING: %s (expiration timeout: %s)\n\n\n",
-                                      System.currentTimeMillis(), exp, exp.getExpires() );
+                        logger.debug( "\n\n\n [%s] TRIGGERING: %s (expiration timeout: %s)\n\n\n", System.currentTimeMillis(), exp, exp.getExpires() );
 
                         trigger( exp );
                     }
@@ -470,8 +467,8 @@ public class DefaultExpirationManager
     @Override
     public String toString()
     {
-        return String.format( "DefaultExpirationManager@%s [\n  Event Manager: %s\n  Clock Source: %s\n  Block Store: %s\n]",
-                              hashCode(), events, clock, store );
+        return String.format( "DefaultExpirationManager@%s [\n  Event Manager: %s\n  Clock Source: %s\n  Block Store: %s\n]", hashCode(), events,
+                              clock, store );
     }
 
 }

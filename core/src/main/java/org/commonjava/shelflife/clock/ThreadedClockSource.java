@@ -1,6 +1,7 @@
 package org.commonjava.shelflife.clock;
 
-import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PreDestroy;
 import javax.enterprise.inject.Alternative;
@@ -8,7 +9,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.commonjava.cdi.util.weft.ExecutorConfig;
-import org.commonjava.cdi.util.weft.PeriodicRunnable;
+import org.commonjava.cdi.util.weft.StoppableRunnable;
 import org.commonjava.shelflife.ExpirationManager;
 import org.commonjava.shelflife.ExpirationManagerException;
 import org.commonjava.util.logging.Logger;
@@ -22,7 +23,7 @@ public class ThreadedClockSource
 
     @Inject
     @ExecutorConfig( threads = 1, priority = 9, daemon = true, named = "shelflife-clock" )
-    private Executor executor;
+    private ScheduledExecutorService executor;
 
     private Clock clock;
 
@@ -33,7 +34,7 @@ public class ThreadedClockSource
         this.period = ExpirationManager.NEXT_EXPIRATION_BATCH_OFFSET;
     }
 
-    public ThreadedClockSource( final Executor executor, final long period )
+    public ThreadedClockSource( final ScheduledExecutorService executor, final long period )
     {
         this.executor = executor;
         this.period = period;
@@ -56,32 +57,30 @@ public class ThreadedClockSource
     {
         if ( clock != null )
         {
-            throw new RuntimeException( "Cannot start with expiration manager: " + manager
-                + ". This clock source is already started!" );
+            throw new RuntimeException( "Cannot start with expiration manager: " + manager + ". This clock source is already started!" );
         }
 
         logger.debug( "Starting clock for manager: %s, period: %s", manager, period );
 
         manager.loadNextExpirations();
-        clock = new Clock( manager, false );
-        executor.execute( clock );
+        clock = new Clock( manager );
+        executor.scheduleAtFixedRate( clock, 0, period, TimeUnit.MILLISECONDS );
     }
 
     private final class Clock
-        extends PeriodicRunnable
+        extends StoppableRunnable
     {
         private final Logger logger = new Logger( getClass() );
 
         private final ExpirationManager manager;
 
-        private Clock( final ExpirationManager manager, final boolean wait )
+        private Clock( final ExpirationManager manager )
         {
-            super( period, wait, executor );
             this.manager = manager;
         }
 
         @Override
-        protected void onPeriodExpire()
+        protected void doExecute()
         {
             logger.debug( "Clearing expired from: %s", manager );
             manager.clearExpired();

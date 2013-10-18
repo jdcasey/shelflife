@@ -8,13 +8,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -22,7 +23,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.commonjava.cdi.util.weft.ExecutorConfig;
-import org.commonjava.cdi.util.weft.PeriodicRunnable;
+import org.commonjava.cdi.util.weft.StoppableRunnable;
 import org.commonjava.shelflife.ExpirationManagerException;
 import org.commonjava.shelflife.inject.Shelflife;
 import org.commonjava.shelflife.model.Expiration;
@@ -47,16 +48,15 @@ public class FlatBlockStore
 
     @Inject
     @ExecutorConfig( daemon = true, named = "shelflife-flushcache", threads = 1, priority = 6 )
-    private Executor executor;
+    private ScheduledExecutorService executor;
 
-    private final Map<String, Set<Expiration>> cache = new HashMap<String, Set<Expiration>>();
+    private final Map<String, Set<Expiration>> blocks = new ConcurrentHashMap<>();
 
     public FlatBlockStore()
     {
     }
 
-    public FlatBlockStore( final FlatBlockStoreConfiguration config, final JsonSerializer serializer,
-                           final Executor executor )
+    public FlatBlockStore( final FlatBlockStoreConfiguration config, final JsonSerializer serializer, final ScheduledExecutorService executor )
     {
         this.config = config;
         this.serializer = serializer;
@@ -67,7 +67,7 @@ public class FlatBlockStore
     @PostConstruct
     public void startCacheManager()
     {
-        executor.execute( new CacheFlusher( config.getCacheFlushMillis(), executor ) );
+        executor.scheduleAtFixedRate( new CacheFlusher(), config.getCacheFlushMillis(), config.getCacheFlushMillis(), TimeUnit.MILLISECONDS );
     }
 
     @Override
@@ -76,7 +76,7 @@ public class FlatBlockStore
     {
         for ( final Map.Entry<String, Set<Expiration>> entry : currentBlocks.entrySet() )
         {
-            putBlock( entry.getKey(), entry.getValue() );
+            writeBlock( entry.getKey(), entry.getValue() );
         }
     }
 
@@ -88,11 +88,12 @@ public class FlatBlockStore
         if ( block == null )
         {
             block = new TreeSet<Expiration>();
+            blocks.put( key, block );
         }
 
-        if ( block.add( expiration ) )
+        synchronized ( block )
         {
-            putBlock( key, block );
+            block.add( expiration );
         }
     }
 
@@ -100,7 +101,7 @@ public class FlatBlockStore
     public Set<Expiration> getBlock( final String key )
         throws ExpirationManagerException
     {
-        Set<Expiration> block = cache.get( key );
+        Set<Expiration> block = blocks.get( key );
         if ( block == null )
         {
             final File f = getBlockFile( key );
@@ -120,8 +121,7 @@ public class FlatBlockStore
                 }
                 catch ( final IOException e )
                 {
-                    throw new ExpirationManagerException( "Failed to read block from: %s. Reason: %s", e, f,
-                                                          e.getMessage() );
+                    throw new ExpirationManagerException( "Failed to read block from: %s. Reason: %s", e, f, e.getMessage() );
                 }
                 finally
                 {
@@ -138,27 +138,26 @@ public class FlatBlockStore
         throws ExpirationManagerException
     {
         final Set<Expiration> block = getBlock( key );
-        if ( block != null && block.remove( expiration ) )
+        if ( block != null )
         {
-            putBlock( key, block );
+            synchronized ( block )
+            {
+                block.remove( expiration );
+            }
         }
     }
 
-    private void putBlock( final String key, final Set<Expiration> block )
-    {
-        cache.put( key, block );
-    }
-
+    @Override
     @PreDestroy
     public synchronized void flushCaches()
         throws ExpirationManagerException
     {
-        final Set<String> keys = new HashSet<String>( cache.keySet() );
+        final Set<String> keys = new HashSet<String>( blocks.keySet() );
         for ( final String key : keys )
         {
-            final Set<Expiration> block = cache.get( key );
+            final Set<Expiration> block = blocks.get( key );
             writeBlock( key, block );
-            cache.remove( key );
+            blocks.remove( key );
         }
     }
 
@@ -185,8 +184,7 @@ public class FlatBlockStore
         }
         catch ( final IOException e )
         {
-            throw new ExpirationManagerException( "Failed to write expiration block to: %s. Reason: %s", e, f,
-                                                  e.getMessage() );
+            throw new ExpirationManagerException( "Failed to write expiration block to: %s. Reason: %s", e, f, e.getMessage() );
         }
         finally
         {
@@ -200,7 +198,7 @@ public class FlatBlockStore
     {
         for ( final String key : currentKeys )
         {
-            cache.remove( key );
+            blocks.remove( key );
             final File f = getBlockFile( key );
             if ( f.exists() )
             {
@@ -215,7 +213,7 @@ public class FlatBlockStore
     {
         for ( final String key : currentKeys )
         {
-            cache.remove( key );
+            blocks.remove( key );
             final File f = getBlockFile( key );
             if ( f.exists() )
             {
@@ -235,15 +233,10 @@ public class FlatBlockStore
     }
 
     private final class CacheFlusher
-        extends PeriodicRunnable
+        extends StoppableRunnable
     {
-        public CacheFlusher( final long period, final Executor executor )
-        {
-            super( period, true, executor );
-        }
-
         @Override
-        protected void onPeriodExpire()
+        protected void doExecute()
         {
             try
             {

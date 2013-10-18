@@ -1,9 +1,9 @@
 package org.commonjava.shelflife.store.memory;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.commonjava.shelflife.ExpirationManagerException;
 import org.commonjava.shelflife.model.Expiration;
@@ -17,7 +17,7 @@ public class MemoryBlockStore
 
     private final Logger logger = new Logger( getClass() );
 
-    private final Map<String, Set<Expiration>> blocks = new HashMap<String, Set<Expiration>>();
+    private final Map<String, Set<Expiration>> blocks = new ConcurrentHashMap<>();
 
     @Override
     public void removeBlocks( final Set<String> currentKeys )
@@ -49,8 +49,11 @@ public class MemoryBlockStore
         final Set<Expiration> block = blocks.get( key );
         if ( block != null )
         {
-            logger.debug( "Removing from block: %s", expiration );
-            block.remove( expiration );
+            synchronized ( block )
+            {
+                logger.debug( "Removing from block: %s", expiration );
+                block.remove( expiration );
+            }
         }
     }
 
@@ -74,8 +77,11 @@ public class MemoryBlockStore
             blocks.put( key, block );
         }
 
-        logger.debug( "Adding to block: %s", expiration );
-        block.add( expiration );
+        synchronized ( block )
+        {
+            logger.debug( "Adding to block: %s", expiration );
+            block.add( expiration );
+        }
     }
 
     @Override
@@ -84,7 +90,7 @@ public class MemoryBlockStore
     {
         final Set<Expiration> block = blocks.get( key );
         logger.debug( "Retrieving block: %s\n\n%s\n\n", key, block );
-        return block;
+        return block == null ? null : new TreeSet<>( block );
     }
 
     @Override

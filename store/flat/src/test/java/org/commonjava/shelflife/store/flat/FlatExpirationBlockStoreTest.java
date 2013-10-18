@@ -21,12 +21,11 @@ public class FlatExpirationBlockStoreTest
     @Before
     public void setupStore()
     {
-        final FlatBlockStoreConfiguration config =
-            new FlatBlockStoreConfiguration( tempFolder.newFolder( "expiration-store" ) );
+        final FlatBlockStoreConfiguration config = new FlatBlockStoreConfiguration( tempFolder.newFolder( "expiration-store" ) );
 
         final JsonSerializer serializer = new JsonSerializer();
 
-        store = new FlatBlockStore( config, serializer, Executors.newFixedThreadPool( 1 ) );
+        store = new FlatBlockStore( config, serializer, Executors.newScheduledThreadPool( 1 ) );
     }
 
     @Override

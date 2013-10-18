@@ -81,6 +81,11 @@
         <version>4.8.2</version>
         <scope>test</scope>
       </dependency>
+      <dependency>
+        <groupId>org.commonjava.cdi.util</groupId>
+        <artifactId>weft</artifactId>
+        <version>0.3-SNAPSHOT</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   
