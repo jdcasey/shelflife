@@ -29,6 +29,7 @@ import org.commonjava.shelflife.ExpirationManagerException;
 import org.commonjava.shelflife.inject.Shelflife;
 import org.commonjava.shelflife.model.Expiration;
 import org.commonjava.shelflife.store.ExpirationBlockStore;
+import org.commonjava.util.logging.Logger;
 import org.commonjava.web.json.ser.JsonSerializer;
 
 import com.google.gson.reflect.TypeToken;
@@ -43,6 +44,8 @@ public class FlatBlockStore
     private static final String PREFIX = "expiration-block-";
 
     private static final String SUFFIX = ".json";
+
+    private final Logger logger = new Logger( getClass() );
 
     @Inject
     @Shelflife
@@ -123,6 +126,7 @@ public class FlatBlockStore
                     {
                     };
 
+                    logger.info( "Loading expiration block from: %s", f );
                     final List<Expiration> listing = serializer.fromStream( stream, ENCODING, token );
                     block = new TreeSet<Expiration>( listing );
                 }
@@ -200,6 +204,7 @@ public class FlatBlockStore
         try
         {
             writer = new FileWriter( f );
+            logger.info( "Writing expiration block to: %s", f );
             final String json = serializer.toString( sortedBlock );
 
             writer.write( json );
@@ -224,6 +229,7 @@ public class FlatBlockStore
             final File f = getBlockFile( key );
             if ( f.exists() )
             {
+                logger.info( "Deleting expiration block at: %s", f );
                 f.delete();
             }
         }
@@ -239,6 +245,7 @@ public class FlatBlockStore
             final File f = getBlockFile( key );
             if ( f.exists() )
             {
+                logger.info( "Deleting expiration block at: %s", f );
                 f.delete();
             }
         }

@@ -66,6 +66,7 @@ public class DefaultExpirationManager
     public void startClock()
         throws ExpirationManagerException
     {
+        logger.info( "Starting expiration manager." );
         loadInitialExpirations();
         clock.start( this );
     }
@@ -333,6 +334,8 @@ public class DefaultExpirationManager
         {
             keys = keys.subList( 0, idx + 1 );
         }
+
+        logger.info( "Loading initial expiration blocks: %s", keys );
 
         for ( final String key : keys )
         {
