@@ -1,5 +1,8 @@
 package org.commonjava.shelflife.store.memory;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -98,6 +101,14 @@ public class MemoryBlockStore
         throws ExpirationManagerException
     {
         // NOP, we're all cache here, baby!
+    }
+
+    @Override
+    public List<String> listKeysInOrder()
+    {
+        final List<String> keys = new ArrayList<>( blocks.keySet() );
+        Collections.sort( keys );
+        return keys;
     }
 
 }

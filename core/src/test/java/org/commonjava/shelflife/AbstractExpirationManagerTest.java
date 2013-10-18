@@ -89,12 +89,16 @@ public abstract class AbstractExpirationManagerTest
         throws Exception
     {
         assertThat( ex.getLastEventType(), equalTo( ExpirationEventType.EXPIRE ) );
+        assertThat( ex.isActive(), equalTo( false ) );
+        assertThat( ex.isCanceled(), equalTo( false ) );
     }
 
     protected void assertExpirationCanceled( final Expiration ex )
         throws Exception
     {
         assertThat( ex.getLastEventType(), equalTo( ExpirationEventType.CANCEL ) );
+        assertThat( ex.isActive(), equalTo( false ) );
+        assertThat( ex.isCanceled(), equalTo( true ) );
     }
 
     protected void assertExpirationScheduled( final Expiration ex )
@@ -198,11 +202,15 @@ public abstract class AbstractExpirationManagerTest
     {
         final Expiration ex = new Expiration( new ExpirationKey( "test", "one" ), 50000 );
         getManager().schedule( ex );
+
+        getListener().waitForEvents( 1, getEventTimeout() );
+
         assertExpirationScheduled( ex );
 
         getManager().trigger( ex );
 
-        assertThat( ex.isActive(), equalTo( false ) );
+        getListener().waitForEvents( 1, getEventTimeout() );
+
         assertExpirationTriggered( ex );
     }
 
@@ -212,27 +220,25 @@ public abstract class AbstractExpirationManagerTest
     {
         final Expiration ex = new Expiration( new ExpirationKey( "test", "one" ), 50000 );
         getManager().schedule( ex );
-        assertExpirationScheduled( ex );
 
-        getManager().trigger( ex );
+        List<ExpirationEvent> events = getListener().waitForEvents( 1, getEventTimeout() );
 
-        final List<ExpirationEvent> events = getListener().waitForEvents( 2, getEventTimeout() );
-
-        assertThat( ex.isActive(), equalTo( false ) );
-        assertThat( events, notNullValue() );
-        assertThat( events.size(), equalTo( 2 ) );
-
-        int idx = 0;
-
-        ExpirationEvent event = events.get( idx );
+        ExpirationEvent event = events.get( 0 );
         assertThat( event.getType(), equalTo( ExpirationEventType.SCHEDULE ) );
         assertThat( event.getExpiration(), equalTo( ex ) );
         assertThat( event.getExpiration()
                          .getKey(), equalTo( ex.getKey() ) );
 
-        idx++;
+        assertExpirationScheduled( ex );
 
-        event = events.get( idx );
+        getManager().trigger( ex );
+
+        events = getListener().waitForEvents( 1, getEventTimeout() );
+
+        assertThat( events, notNullValue() );
+        assertThat( events.size(), equalTo( 1 ) );
+
+        event = events.get( 0 );
         assertThat( event.getType(), equalTo( ExpirationEventType.EXPIRE ) );
         assertThat( event.getExpiration(), equalTo( ex ) );
         assertThat( event.getExpiration()
@@ -246,8 +252,7 @@ public abstract class AbstractExpirationManagerTest
         throws Exception
     {
         final Expiration[] exs =
-            { new Expiration( new ExpirationKey( "test", "one" ), 50000 ),
-                new Expiration( new ExpirationKey( "test", "two" ), 50000 ),
+            { new Expiration( new ExpirationKey( "test", "one" ), 50000 ), new Expiration( new ExpirationKey( "test", "two" ), 50000 ),
                 new Expiration( new ExpirationKey( "test", "three" ), 50000 ) };
 
         for ( final Expiration ex : exs )
@@ -280,8 +285,7 @@ public abstract class AbstractExpirationManagerTest
         throws Exception
     {
         final Expiration[] exs =
-            { new Expiration( new ExpirationKey( "test", "one" ), 50000 ),
-                new Expiration( new ExpirationKey( "test", "two" ), 50000 ),
+            { new Expiration( new ExpirationKey( "test", "one" ), 50000 ), new Expiration( new ExpirationKey( "test", "two" ), 50000 ),
                 new Expiration( new ExpirationKey( "test", "three" ), 50000 ), };
 
         for ( final Expiration ex : exs )
@@ -341,8 +345,7 @@ public abstract class AbstractExpirationManagerTest
         throws Exception
     {
         final Expiration[] exs =
-            { new Expiration( new ExpirationKey( "test", "one" ), 50000 ),
-                new Expiration( new ExpirationKey( "test", "two" ), 50000 ),
+            { new Expiration( new ExpirationKey( "test", "one" ), 50000 ), new Expiration( new ExpirationKey( "test", "two" ), 50000 ),
                 new Expiration( new ExpirationKey( "test", "three" ), 50000 ) };
 
         for ( final Expiration ex : exs )
@@ -384,8 +387,7 @@ public abstract class AbstractExpirationManagerTest
         throws Exception
     {
         final Expiration[] exs =
-            { new Expiration( new ExpirationKey( "test", "one" ), 50000 ),
-                new Expiration( new ExpirationKey( "test", "two" ), 50000 ),
+            { new Expiration( new ExpirationKey( "test", "one" ), 50000 ), new Expiration( new ExpirationKey( "test", "two" ), 50000 ),
                 new Expiration( new ExpirationKey( "test", "three" ), 50000 ), };
 
         for ( final Expiration ex : exs )
@@ -485,25 +487,26 @@ public abstract class AbstractExpirationManagerTest
     {
         final Expiration ex = new Expiration( new ExpirationKey( "test", "one" ), 50000 );
         getManager().schedule( ex );
-        assertExpirationScheduled( ex );
 
-        getManager().cancel( ex );
+        List<ExpirationEvent> events = getListener().waitForEvents( 2, getEventTimeout() );
 
-        final List<ExpirationEvent> events = getListener().waitForEvents( 2, getEventTimeout() );
+        assertThat( events.size(), equalTo( 1 ) );
 
-        assertThat( ex.isActive(), equalTo( false ) );
-
-        int idx = 0;
-
-        ExpirationEvent event = events.get( idx );
+        ExpirationEvent event = events.get( 0 );
         assertThat( event.getType(), equalTo( ExpirationEventType.SCHEDULE ) );
         assertThat( event.getExpiration(), equalTo( ex ) );
         assertThat( event.getExpiration()
                          .getKey(), equalTo( ex.getKey() ) );
 
-        idx++;
+        assertExpirationScheduled( ex );
 
-        event = events.get( idx );
+        getManager().cancel( ex );
+
+        events = getListener().waitForEvents( 2, getEventTimeout() );
+
+        assertThat( events.size(), equalTo( 1 ) );
+
+        event = events.get( 0 );
         assertThat( event.getType(), equalTo( ExpirationEventType.CANCEL ) );
         assertThat( event.getExpiration(), equalTo( ex ) );
         assertThat( event.getExpiration()
@@ -517,8 +520,7 @@ public abstract class AbstractExpirationManagerTest
         throws Exception
     {
         final Expiration[] exs =
-            { new Expiration( new ExpirationKey( "test", "one" ), 10000 ),
-                new Expiration( new ExpirationKey( "test", "two" ), 10000 ),
+            { new Expiration( new ExpirationKey( "test", "one" ), 10000 ), new Expiration( new ExpirationKey( "test", "two" ), 10000 ),
                 new Expiration( new ExpirationKey( "test", "three" ), 10000 ), };
 
         for ( final Expiration ex : exs )
@@ -551,8 +553,7 @@ public abstract class AbstractExpirationManagerTest
         throws Exception
     {
         final Expiration[] exs =
-            { new Expiration( new ExpirationKey( "test", "one" ), 50000 ),
-                new Expiration( new ExpirationKey( "test", "two" ), 50000 ),
+            { new Expiration( new ExpirationKey( "test", "one" ), 50000 ), new Expiration( new ExpirationKey( "test", "two" ), 50000 ),
                 new Expiration( new ExpirationKey( "test", "three" ), 50000 ), };
 
         for ( final Expiration ex : exs )
@@ -612,8 +613,7 @@ public abstract class AbstractExpirationManagerTest
         throws Exception
     {
         final Expiration[] exs =
-            { new Expiration( new ExpirationKey( "test", "one" ), 10000 ),
-                new Expiration( new ExpirationKey( "test", "two" ), 10000 ),
+            { new Expiration( new ExpirationKey( "test", "one" ), 10000 ), new Expiration( new ExpirationKey( "test", "two" ), 10000 ),
                 new Expiration( new ExpirationKey( "test", "three" ), 10000 ), };
 
         for ( final Expiration ex : exs )
@@ -660,8 +660,7 @@ public abstract class AbstractExpirationManagerTest
         throws Exception
     {
         final Expiration[] exs =
-            { new Expiration( new ExpirationKey( "test", "one" ), 50000 ),
-                new Expiration( new ExpirationKey( "test", "two" ), 50000 ),
+            { new Expiration( new ExpirationKey( "test", "one" ), 50000 ), new Expiration( new ExpirationKey( "test", "two" ), 50000 ),
                 new Expiration( new ExpirationKey( "test", "three" ), 50000 ), };
 
         for ( final Expiration ex : exs )

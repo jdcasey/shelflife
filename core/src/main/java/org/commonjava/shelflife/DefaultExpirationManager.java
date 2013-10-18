@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -65,6 +66,7 @@ public class DefaultExpirationManager
     public void startClock()
         throws ExpirationManagerException
     {
+        loadInitialExpirations();
         clock.start( this );
     }
 
@@ -196,6 +198,7 @@ public class DefaultExpirationManager
     public synchronized void trigger( final Expiration expiration )
         throws ExpirationManagerException
     {
+        logger.info( "Attempting to trigger: %s", expiration.getKey() );
         synchronized ( expiration )
         {
             if ( expiration.isActive() && expirations.contains( expiration ) )
@@ -320,10 +323,32 @@ public class DefaultExpirationManager
         return matching;
     }
 
+    public synchronized void loadInitialExpirations()
+    {
+        final String currentKey = generateCurrentBlockKey();
+        List<String> keys = store.listKeysInOrder();
+
+        final int idx = keys.indexOf( currentKey );
+        if ( idx > -1 && idx < keys.size() - 1 )
+        {
+            keys = keys.subList( 0, idx + 1 );
+        }
+
+        for ( final String key : keys )
+        {
+            loadExpirations( key );
+        }
+    }
+
     @Override
-    public synchronized void loadNextExpirations()
+    public void loadNextExpirations()
     {
         final String key = generateCurrentBlockKey();
+        loadExpirations( key );
+    }
+
+    protected synchronized void loadExpirations( final String key )
+    {
         logger.debug( "current block key is: %s", key );
         if ( currentKeys.contains( key ) )
         {
@@ -452,12 +477,12 @@ public class DefaultExpirationManager
     protected synchronized void remove( final Expiration expiration )
         throws ExpirationManagerException
     {
-        if ( !expirations.remove( expiration ) )
-        {
-            final String key = generateBlockKey( expiration.getExpires() );
-            store.removeFromBlock( key, expiration );
-        }
-        else if ( expirations.isEmpty() )
+        final boolean removedFromLocalCache = expirations.remove( expiration );
+
+        final String key = generateBlockKey( expiration.getExpires() );
+        store.removeFromBlock( key, expiration );
+
+        if ( removedFromLocalCache )
         {
             store.removeBlocks( currentKeys );
             currentKeys.clear();

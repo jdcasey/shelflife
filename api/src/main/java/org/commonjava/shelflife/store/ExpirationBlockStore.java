@@ -1,5 +1,6 @@
 package org.commonjava.shelflife.store;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -8,6 +9,8 @@ import org.commonjava.shelflife.model.Expiration;
 
 public interface ExpirationBlockStore
 {
+
+    List<String> listKeysInOrder();
 
     void writeBlocks( Map<String, Set<Expiration>> currentBlocks )
         throws ExpirationManagerException;

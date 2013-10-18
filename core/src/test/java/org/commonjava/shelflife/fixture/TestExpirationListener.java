@@ -42,7 +42,7 @@ public class TestExpirationListener
     public List<ExpirationEvent> waitForEvents( final int count, final long perEventTimeout )
         throws InterruptedException
     {
-        final long timeout = ( count + 1 ) * perEventTimeout;
+        final long timeout = ( count + 4 ) * perEventTimeout;
 
         final long start = System.currentTimeMillis();
         long elapsed;

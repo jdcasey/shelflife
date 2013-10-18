@@ -62,7 +62,6 @@ public class ThreadedClockSource
 
         logger.debug( "Starting clock for manager: %s, period: %s", manager, period );
 
-        manager.loadNextExpirations();
         clock = new Clock( manager );
         executor.scheduleAtFixedRate( clock, 0, period, TimeUnit.MILLISECONDS );
     }

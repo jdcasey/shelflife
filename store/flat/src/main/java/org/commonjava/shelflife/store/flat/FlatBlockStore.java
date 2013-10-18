@@ -3,6 +3,7 @@ package org.commonjava.shelflife.store.flat;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -38,6 +39,10 @@ public class FlatBlockStore
 {
 
     private static final String ENCODING = "UTF-8";
+
+    private static final String PREFIX = "expiration-block-";
+
+    private static final String SUFFIX = ".json";
 
     @Inject
     @Shelflife
@@ -88,12 +93,14 @@ public class FlatBlockStore
         if ( block == null )
         {
             block = new TreeSet<Expiration>();
-            blocks.put( key, block );
         }
 
         synchronized ( block )
         {
-            block.add( expiration );
+            if ( block.add( expiration ) )
+            {
+                cacheBlock( key, block );
+            }
         }
     }
 
@@ -142,9 +149,24 @@ public class FlatBlockStore
         {
             synchronized ( block )
             {
-                block.remove( expiration );
+                if ( block.remove( expiration ) )
+                {
+                    if ( block.isEmpty() )
+                    {
+                        removeBlocks( key );
+                    }
+                    else
+                    {
+                        cacheBlock( key, block );
+                    }
+                }
             }
         }
+    }
+
+    private void cacheBlock( final String key, final Set<Expiration> block )
+    {
+        blocks.put( key, block );
     }
 
     @Override
@@ -222,9 +244,9 @@ public class FlatBlockStore
         }
     }
 
-    private File getBlockFile( final String key )
+    protected File getBlockFile( final String key )
     {
-        final String fname = "expiration-block-" + key + ".json";
+        final String fname = PREFIX + key + SUFFIX;
 
         config.getStorageDirectory()
               .mkdirs();
@@ -249,5 +271,50 @@ public class FlatBlockStore
             }
         }
 
+    }
+
+    @Override
+    public List<String> listKeysInOrder()
+    {
+        final File dir = config.getStorageDirectory();
+        if ( dir.isDirectory() )
+        {
+            final File[] blockFiles = dir.listFiles( new FileFilter()
+            {
+                @Override
+                public boolean accept( final File file )
+                {
+                    return isBlockFile( file );
+                }
+            } );
+
+            if ( blockFiles != null && blockFiles.length > 0 )
+            {
+                final List<String> keys = new ArrayList<String>();
+                for ( final File file : blockFiles )
+                {
+                    keys.add( getKey( file ) );
+                }
+
+                Collections.sort( keys );
+
+                return keys;
+            }
+        }
+
+        return null;
+    }
+
+    protected boolean isBlockFile( final File file )
+    {
+        final String name = file.getName();
+        return name.startsWith( PREFIX ) && name.endsWith( SUFFIX );
+    }
+
+    protected String getKey( final File file )
+    {
+        return file.getName()
+                   .substring( PREFIX.length(), file.getName()
+                                                    .length() - SUFFIX.length() );
     }
 }

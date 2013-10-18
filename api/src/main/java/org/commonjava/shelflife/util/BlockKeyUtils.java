@@ -39,13 +39,9 @@ public final class BlockKeyUtils
         cal.setTime( new Date( d ) );
 
         final String key =
-            String.format( "%d.%d.%d.%d-%d",
-                           cal.get( Calendar.YEAR ),
-                           ( cal.get( Calendar.MONTH ) + 1 ),
-                           cal.get( Calendar.DATE ),
+            String.format( "%d.%02d.%02d.%02d-%02d", cal.get( Calendar.YEAR ), ( cal.get( Calendar.MONTH ) + 1 ), cal.get( Calendar.DATE ),
                            cal.get( Calendar.HOUR_OF_DAY ),
-                           ( ( cal.get( Calendar.MINUTE ) / ExpirationManager.NEXT_EXPIRATION_OFFSET_MINUTES ) + ( useNext ? 1
-                                           : 0 ) ) );
+                           ( ( cal.get( Calendar.MINUTE ) / ExpirationManager.NEXT_EXPIRATION_OFFSET_MINUTES ) + ( useNext ? 1 : 0 ) ) );
 
         return key;
     }
