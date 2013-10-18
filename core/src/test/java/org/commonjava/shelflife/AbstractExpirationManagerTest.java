@@ -467,6 +467,9 @@ public abstract class AbstractExpirationManagerTest
     {
         final Expiration ex = new Expiration( new ExpirationKey( "test", "one" ), 5000 );
         getManager().schedule( ex );
+
+        getListener().waitForEvents( 1, getEventTimeout() );
+
         assertExpirationScheduled( ex );
         final long start = System.currentTimeMillis();
 
@@ -474,9 +477,9 @@ public abstract class AbstractExpirationManagerTest
 
         final long stop = System.currentTimeMillis();
 
-        assertThat( ex.isActive(), equalTo( false ) );
-        assertThat( ex.isCanceled(), equalTo( true ) );
         assertThat( stop - start < 500, equalTo( true ) );
+
+        getListener().waitForEvents( 1, getEventTimeout() );
 
         assertExpirationCanceled( ex );
     }

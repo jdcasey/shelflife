@@ -71,7 +71,12 @@ public class TimerClockSource
     @PreDestroy
     public void stop()
     {
+        synchronized ( clock )
+        {
+            clock.cancel();
+        }
         timer.cancel();
+        timer.purge();
     }
 
 }

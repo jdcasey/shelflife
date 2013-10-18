@@ -91,6 +91,7 @@ public class ThreadedClockSource
     public void stop()
     {
         clock.stop();
+        executor.shutdown();
     }
 
 }
