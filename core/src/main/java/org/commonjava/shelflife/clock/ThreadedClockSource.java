@@ -60,7 +60,7 @@ public class ThreadedClockSource
             throw new RuntimeException( "Cannot start with expiration manager: " + manager + ". This clock source is already started!" );
         }
 
-        logger.debug( "Starting clock for manager: %s, period: %s", manager, period );
+        logger.info( "Starting clock for manager: %s, period: %s", manager, period );
 
         clock = new Clock( manager );
         executor.scheduleAtFixedRate( clock, 0, period, TimeUnit.MILLISECONDS );
@@ -81,7 +81,7 @@ public class ThreadedClockSource
         @Override
         protected void doExecute()
         {
-            logger.debug( "Clearing expired from: %s", manager );
+            logger.info( "Clearing expired from: %s", manager );
             manager.clearExpired();
         }
     }
@@ -92,6 +92,12 @@ public class ThreadedClockSource
     {
         clock.stop();
         executor.shutdown();
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.format( "ThreadedClockSource [period=%s]", period );
     }
 
 }

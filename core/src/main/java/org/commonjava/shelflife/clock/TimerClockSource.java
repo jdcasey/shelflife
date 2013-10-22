@@ -41,7 +41,7 @@ public class TimerClockSource
             throw new RuntimeException( "Cannot start with expiration manager: " + manager + ". This clock source is already started!" );
         }
 
-        logger.debug( "Starting clock for manager: %s, period: %s", manager, period );
+        logger.info( "Starting clock for manager: %s, period: %s", manager, period );
 
         clock = new Clock( manager );
         timer.schedule( clock, 0, period );
@@ -62,7 +62,7 @@ public class TimerClockSource
         @Override
         public void run()
         {
-            logger.debug( "Clearing expired from: %s", manager );
+            logger.info( "Clearing expired from: %s", manager );
             manager.clearExpired();
         }
     }
@@ -77,6 +77,12 @@ public class TimerClockSource
         }
         timer.cancel();
         timer.purge();
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.format( "TimerClockSource [period=%s]", period );
     }
 
 }
