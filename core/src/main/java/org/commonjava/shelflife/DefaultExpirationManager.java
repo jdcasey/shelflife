@@ -7,6 +7,7 @@ import static org.commonjava.shelflife.util.BlockKeyUtils.generateBlockKey;
 import static org.commonjava.shelflife.util.BlockKeyUtils.generateCurrentBlockKey;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -105,6 +106,11 @@ public class DefaultExpirationManager
     public void schedule( final Expiration expiration )
         throws ExpirationManagerException
     {
+        if ( expiration == null )
+        {
+            return;
+        }
+
         final long expires = expiration.getExpires();
         if ( expires < System.currentTimeMillis() )
         {
@@ -316,8 +322,21 @@ public class DefaultExpirationManager
             expiration.schedule();
         }
 
-        expirations.addAll( toAdd.keySet() );
-        currentKeys.addAll( toAdd.values() );
+        for ( final Expiration exp : toAdd.keySet() )
+        {
+            if ( exp != null )
+            {
+                expirations.add( exp );
+            }
+        }
+
+        for ( final String key : toAdd.values() )
+        {
+            if ( key != null )
+            {
+                currentKeys.add( key );
+            }
+        }
 
         for ( final Entry<Expiration, String> entry : toStore.entrySet() )
         {
@@ -331,8 +350,13 @@ public class DefaultExpirationManager
     // FIXME: This only searches the currently loaded blocks.
     protected Set<Expiration> getMatching( final ExpirationMatcher matcher )
     {
+        if ( expirations == null || expirations.isEmpty() )
+        {
+            return Collections.emptySet();
+        }
+
         final Set<Expiration> matching = new TreeSet<Expiration>();
-        for ( final Expiration exp : new TreeSet<Expiration>( expirations ) )
+        for ( final Expiration exp : new TreeSet<>( expirations ) )
         {
             if ( matcher.matches( exp ) )
             {
@@ -399,7 +423,7 @@ public class DefaultExpirationManager
                 {
                     for ( final Expiration expiration : expirations )
                     {
-                        if ( this.expirations.add( expiration ) )
+                        if ( expiration != null && this.expirations.add( expiration ) )
                         {
                             added++;
                         }
@@ -426,7 +450,7 @@ public class DefaultExpirationManager
     // TODO: Split expirations up into blocks and parallelize the purge.
     protected void purgeExpired()
     {
-        if ( expirations.isEmpty() )
+        if ( expirations == null || expirations.isEmpty() )
         {
             return;
         }
@@ -506,6 +530,11 @@ public class DefaultExpirationManager
     protected void remove( final Expiration expiration )
         throws ExpirationManagerException
     {
+        if ( expiration == null )
+        {
+            return;
+        }
+
         if ( expirations.remove( expiration ) )
         {
             final String key = generateBlockKey( expiration.getExpires() );
