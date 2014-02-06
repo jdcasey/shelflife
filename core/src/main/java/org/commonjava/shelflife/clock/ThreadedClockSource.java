@@ -25,6 +25,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.commonjava.cdi.util.weft.ExecutorConfig;
+import org.commonjava.cdi.util.weft.ScheduledExecutor;
 import org.commonjava.cdi.util.weft.StoppableRunnable;
 import org.commonjava.shelflife.ExpirationManager;
 import org.commonjava.shelflife.ExpirationManagerException;
@@ -39,6 +40,7 @@ public class ThreadedClockSource
 
     @Inject
     @ExecutorConfig( threads = 1, priority = 9, daemon = true, named = "shelflife-clock" )
+    @ScheduledExecutor
     private ScheduledExecutorService executor;
 
     private Clock clock;

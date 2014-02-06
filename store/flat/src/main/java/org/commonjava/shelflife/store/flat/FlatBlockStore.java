@@ -40,6 +40,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.commonjava.cdi.util.weft.ExecutorConfig;
+import org.commonjava.cdi.util.weft.ScheduledExecutor;
 import org.commonjava.cdi.util.weft.StoppableRunnable;
 import org.commonjava.shelflife.ExpirationManagerException;
 import org.commonjava.shelflife.inject.Shelflife;
@@ -72,6 +73,7 @@ public class FlatBlockStore
 
     @Inject
     @ExecutorConfig( daemon = true, named = "shelflife-flushcache", threads = 1, priority = 6 )
+    @ScheduledExecutor
     private ScheduledExecutorService executor;
 
     private final Map<String, Set<Expiration>> blocks = new ConcurrentHashMap<>();

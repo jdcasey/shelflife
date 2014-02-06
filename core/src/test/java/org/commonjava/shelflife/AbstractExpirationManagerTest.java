@@ -59,7 +59,10 @@ public abstract class AbstractExpirationManagerTest
     @After
     public void stopClock()
     {
-        getClock().stop();
+        if ( getClock() != null )
+        {
+            getClock().stop();
+        }
     }
 
     protected ExpirationManager getManager()
