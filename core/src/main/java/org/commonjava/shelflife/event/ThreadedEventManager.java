@@ -26,11 +26,9 @@ import javax.enterprise.inject.Alternative;
 import javax.inject.Inject;
 
 import org.commonjava.cdi.util.weft.ExecutorConfig;
-import org.commonjava.shelflife.event.ExpirationEvent;
-import org.commonjava.shelflife.event.ExpirationEventManager;
-import org.commonjava.shelflife.event.ExpirationEventType;
 import org.commonjava.shelflife.model.Expiration;
-import org.commonjava.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Alternative
 @ApplicationScoped
@@ -38,7 +36,7 @@ public class ThreadedEventManager
     implements ExpirationEventManager
 {
 
-    private final Logger logger = new Logger( getClass() );
+    private final Logger logger = LoggerFactory.getLogger( getClass() );
 
     private final Set<SimpleEventListener> listeners = new HashSet<SimpleEventListener>();
 
@@ -90,7 +88,7 @@ public class ThreadedEventManager
     private static final class Dispatch
         implements Runnable
     {
-        private final Logger logger = new Logger( getClass() );
+        private final Logger logger = LoggerFactory.getLogger( getClass() );
 
         private final Set<SimpleEventListener> listeners;
 
@@ -105,10 +103,10 @@ public class ThreadedEventManager
         @Override
         public void run()
         {
-            logger.debug( "Firing event: %s to %d listeners: %s", evt, listeners.size(), listeners );
+            logger.debug( "Firing event: {} to {} listeners: {}", evt, listeners.size(), listeners );
             for ( final SimpleEventListener listener : listeners )
             {
-                logger.debug( "%s -> %s", evt, listener );
+                logger.debug( "{} -> {}", evt, listener );
                 listener.onEvent( evt );
             }
         }
@@ -120,11 +118,11 @@ public class ThreadedEventManager
         ExpirationEvent event = null;
         synchronized ( listeners )
         {
-            logger.debug( "Preparing to fire event of type: %s for: %s to listeners: %s", type, expiration, listeners );
+            logger.debug( "Preparing to fire event of type: {} for: {} to listeners: {}", type, expiration, listeners );
             if ( !listeners.isEmpty() )
             {
                 event = new ExpirationEvent( expiration, type );
-                logger.debug( "Adding event dispatch for: %s", event );
+                logger.debug( "Adding event dispatch for: {}", event );
 
                 // TODO: May need to try to avoid new dispatch construction all the time...
                 exec.execute( new Dispatch( listeners, event ) );
@@ -136,7 +134,7 @@ public class ThreadedEventManager
 
                 //                for ( final SimpleEventListener listener : listeners )
                 //                {
-                //                    logger.debug( "%s -> %s", event, listener );
+                //                    logger.debug( "{} -> {}", event, listener );
                 //                    listener.onEvent( event );
                 //                }
             }

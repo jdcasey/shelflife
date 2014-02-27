@@ -29,14 +29,16 @@ import org.commonjava.cdi.util.weft.ScheduledExecutor;
 import org.commonjava.cdi.util.weft.StoppableRunnable;
 import org.commonjava.shelflife.ExpirationManager;
 import org.commonjava.shelflife.ExpirationManagerException;
-import org.commonjava.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Alternative
 @Singleton
 public class ThreadedClockSource
     implements ExpirationClockSource
 {
-    private final Logger logger = new Logger( getClass() );
+
+    private final Logger logger = LoggerFactory.getLogger( getClass() );
 
     @Inject
     @ExecutorConfig( threads = 1, priority = 9, daemon = true, named = "shelflife-clock" )
@@ -60,7 +62,7 @@ public class ThreadedClockSource
 
     public void setPeriod( final long period )
     {
-        logger.debug( "\n\n\n\nCLOCK PERIOD RESET TO: %d ms", period );
+        logger.debug( "\n\n\n\nCLOCK PERIOD RESET TO: {} ms", period );
         this.period = period;
     }
 
@@ -78,7 +80,7 @@ public class ThreadedClockSource
             throw new RuntimeException( "Cannot start with expiration manager: " + manager + ". This clock source is already started!" );
         }
 
-        logger.info( "Starting clock for manager: %s, period: %s", manager, period );
+        logger.info( "Starting clock for manager: {}, period: {}", manager, period );
 
         clock = new Clock( manager );
         executor.scheduleAtFixedRate( clock, 0, period, TimeUnit.MILLISECONDS );
@@ -87,7 +89,7 @@ public class ThreadedClockSource
     private final class Clock
         extends StoppableRunnable
     {
-        private final Logger logger = new Logger( getClass() );
+        private final Logger logger = LoggerFactory.getLogger( getClass() );
 
         private final ExpirationManager manager;
 
@@ -99,7 +101,7 @@ public class ThreadedClockSource
         @Override
         protected void doExecute()
         {
-            logger.info( "Clearing expired from: %s", manager );
+            logger.info( "Clearing expired from: {}", manager );
             manager.clearExpired();
         }
     }

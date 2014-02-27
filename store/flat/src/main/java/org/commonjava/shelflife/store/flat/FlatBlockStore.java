@@ -46,8 +46,9 @@ import org.commonjava.shelflife.ExpirationManagerException;
 import org.commonjava.shelflife.inject.Shelflife;
 import org.commonjava.shelflife.model.Expiration;
 import org.commonjava.shelflife.store.ExpirationBlockStore;
-import org.commonjava.util.logging.Logger;
 import org.commonjava.web.json.ser.JsonSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.reflect.TypeToken;
 
@@ -62,7 +63,7 @@ public class FlatBlockStore
 
     private static final String SUFFIX = ".json";
 
-    private final Logger logger = new Logger( getClass() );
+    private final Logger logger = LoggerFactory.getLogger( getClass() );
 
     @Inject
     @Shelflife
@@ -144,13 +145,13 @@ public class FlatBlockStore
                     {
                     };
 
-                    logger.info( "Loading expiration block from: %s", f );
+                    logger.info( "Loading expiration block from: {}", f );
                     final List<Expiration> listing = serializer.fromStream( stream, ENCODING, token );
                     block = new TreeSet<Expiration>( listing );
                 }
                 catch ( final IOException e )
                 {
-                    throw new ExpirationManagerException( "Failed to read block from: %s. Reason: %s", e, f, e.getMessage() );
+                    throw new ExpirationManagerException( "Failed to read block from: {}. Reason: {}", e, f, e.getMessage() );
                 }
                 finally
                 {
@@ -222,14 +223,14 @@ public class FlatBlockStore
         try
         {
             writer = new FileWriter( f );
-            logger.info( "Writing expiration block to: %s", f );
+            logger.info( "Writing expiration block to: {}", f );
             final String json = serializer.toString( sortedBlock );
 
             writer.write( json );
         }
         catch ( final IOException e )
         {
-            throw new ExpirationManagerException( "Failed to write expiration block to: %s. Reason: %s", e, f, e.getMessage() );
+            throw new ExpirationManagerException( "Failed to write expiration block to: {}. Reason: {}", e, f, e.getMessage() );
         }
         finally
         {
@@ -247,7 +248,7 @@ public class FlatBlockStore
             final File f = getBlockFile( key );
             if ( f.exists() )
             {
-                logger.info( "Deleting expiration block at: %s", f );
+                logger.info( "Deleting expiration block at: {}", f );
                 f.delete();
             }
         }
@@ -263,7 +264,7 @@ public class FlatBlockStore
             final File f = getBlockFile( key );
             if ( f.exists() )
             {
-                logger.info( "Deleting expiration block at: %s", f );
+                logger.info( "Deleting expiration block at: {}", f );
                 f.delete();
             }
         }
@@ -292,7 +293,7 @@ public class FlatBlockStore
             }
             catch ( final ExpirationManagerException e )
             {
-                logger.error( "Failed to write cached blocks to disk: %s", e, e.getMessage() );
+                logger.error( "Failed to write cached blocks to disk: {}", e, e.getMessage() );
             }
         }
 

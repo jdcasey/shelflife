@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.log4j.Level;
 import org.commonjava.shelflife.clock.ExpirationClockSource;
 import org.commonjava.shelflife.event.ExpirationEvent;
 import org.commonjava.shelflife.event.ExpirationEventType;
@@ -33,14 +32,13 @@ import org.commonjava.shelflife.fixture.TestExpirationListener;
 import org.commonjava.shelflife.match.PrefixMatcher;
 import org.commonjava.shelflife.model.Expiration;
 import org.commonjava.shelflife.model.ExpirationKey;
-import org.commonjava.util.logging.Log4jUtil;
-import org.commonjava.util.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractExpirationManagerTest
 {
@@ -52,7 +50,7 @@ public abstract class AbstractExpirationManagerTest
 
     protected TestExpirationListener listener = new TestExpirationListener();
 
-    protected final Logger logger = new Logger( getClass() );
+    private final Logger logger = LoggerFactory.getLogger( getClass() );
 
     protected abstract ExpirationClockSource getClock();
 
@@ -73,13 +71,6 @@ public abstract class AbstractExpirationManagerTest
     protected TestExpirationListener getListener()
     {
         return listener;
-    }
-
-    @BeforeClass
-    public static void startLogging()
-    {
-        // configure( level, "%5p [%l] - %m%n" );
-        Log4jUtil.configure( Level.DEBUG, "%5p (%5r ms; %t) %m%n" );
     }
 
     @Before

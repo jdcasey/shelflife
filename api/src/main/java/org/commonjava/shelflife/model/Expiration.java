@@ -19,13 +19,14 @@ package org.commonjava.shelflife.model;
 import java.io.Serializable;
 
 import org.commonjava.shelflife.event.ExpirationEventType;
-import org.commonjava.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class Expiration
     implements Serializable, Comparable<Expiration>
 {
 
-    private final transient Logger logger = new Logger( getClass() );
+    private transient final Logger logger = LoggerFactory.getLogger( getClass() );
 
     private static final long serialVersionUID = 1L;
 
@@ -47,7 +48,7 @@ public final class Expiration
         final long current = System.currentTimeMillis();
         this.expires = expires < current ? expires + current : expires;
 
-        logger.debug( "[%d] Expire given as: %d, actual expires set to: %s", current, expires, this.expires );
+        logger.debug( "[{}] Expire given as: {}, actual expires set to: {}", current, expires, this.expires );
 
         this.data = data;
     }

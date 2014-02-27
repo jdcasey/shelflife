@@ -28,27 +28,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.log4j.Level;
 import org.commonjava.shelflife.model.Expiration;
 import org.commonjava.shelflife.model.ExpirationKey;
 import org.commonjava.shelflife.store.ExpirationBlockStore;
-import org.commonjava.util.logging.Log4jUtil;
-import org.commonjava.util.logging.Logger;
-import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class ExpirationBlockStoreTCK
 {
 
-    protected final Logger logger = new Logger( getClass() );
+    protected final Logger logger = LoggerFactory.getLogger( getClass() );
 
     protected abstract ExpirationBlockStore getStore();
-
-    @BeforeClass
-    public static void setupLogging()
-    {
-        Log4jUtil.configure( Level.DEBUG, "%5p %m%n" );
-    }
 
     @Test
     public void writeSingletonBlockMapAndRetrieveBlockByKey()
@@ -97,14 +89,14 @@ public abstract class ExpirationBlockStoreTCK
 
         final ExpirationBlockStore store = getStore();
 
-        logger.debug( "storing blocks: %s", blocks );
+        logger.debug( "storing blocks: {}", blocks );
         store.writeBlocks( blocks );
 
         store.flushCaches();
 
         final Set<Expiration> block = store.getBlock( key );
 
-        logger.debug( "For key: %s, retrieved block: %s", key, block );
+        logger.debug( "For key: {}, retrieved block: {}", key, block );
         assertThat( block.size(), equalTo( 2 ) );
 
         final Iterator<Expiration> mine = expirations.iterator();
@@ -138,7 +130,7 @@ public abstract class ExpirationBlockStoreTCK
 
         final ExpirationBlockStore store = getStore();
 
-        logger.debug( "storing blocks: %s", blocks );
+        logger.debug( "storing blocks: {}", blocks );
         store.writeBlocks( blocks );
 
         store.flushCaches();
@@ -180,14 +172,14 @@ public abstract class ExpirationBlockStoreTCK
 
         final ExpirationBlockStore store = getStore();
 
-        logger.debug( "storing blocks: %s", blocks );
+        logger.debug( "storing blocks: {}", blocks );
         store.writeBlocks( blocks );
 
         store.flushCaches();
 
         Set<Expiration> block = store.getBlock( key );
 
-        logger.debug( "For key: %s, retrieved block: %s", key, block );
+        logger.debug( "For key: {}, retrieved block: {}", key, block );
         assertThat( block.size(), equalTo( 2 ) );
 
         store.removeFromBlock( key, e2 );
@@ -196,7 +188,7 @@ public abstract class ExpirationBlockStoreTCK
 
         block = store.getBlock( key );
 
-        logger.debug( "After removal; for key: %s, retrieved block: %s", key, block );
+        logger.debug( "After removal; for key: {}, retrieved block: {}", key, block );
         assertThat( block.size(), equalTo( 1 ) );
         assertThat( block.contains( e1 ), equalTo( true ) );
     }
@@ -219,14 +211,14 @@ public abstract class ExpirationBlockStoreTCK
 
         final ExpirationBlockStore store = getStore();
 
-        logger.debug( "storing blocks: %s", blocks );
+        logger.debug( "storing blocks: {}", blocks );
         store.writeBlocks( blocks );
 
         store.flushCaches();
 
         Set<Expiration> block = store.getBlock( key );
 
-        logger.debug( "For key: %s, retrieved block: %s", key, block );
+        logger.debug( "For key: {}, retrieved block: {}", key, block );
         assertThat( block.size(), equalTo( 2 ) );
 
         store.removeBlocks( key );
@@ -235,7 +227,7 @@ public abstract class ExpirationBlockStoreTCK
 
         block = store.getBlock( key );
 
-        logger.debug( "After removal; for key: %s, retrieved block: %s", key, block );
+        logger.debug( "After removal; for key: {}, retrieved block: {}", key, block );
         assertThat( block, nullValue() );
     }
 
@@ -283,24 +275,24 @@ public abstract class ExpirationBlockStoreTCK
 
         final ExpirationBlockStore store = getStore();
 
-        logger.debug( "storing blocks: %s", blocks );
+        logger.debug( "storing blocks: {}", blocks );
         store.writeBlocks( blocks );
 
         store.flushCaches();
 
         Set<Expiration> block = store.getBlock( key );
 
-        logger.debug( "For key: %s, retrieved block: %s", key, block );
+        logger.debug( "For key: {}, retrieved block: {}", key, block );
         assertThat( block.size(), equalTo( 2 ) );
 
         block = store.getBlock( key2 );
 
-        logger.debug( "For key: %s, retrieved block: %s", key2, block );
+        logger.debug( "For key: {}, retrieved block: {}", key2, block );
         assertThat( block.size(), equalTo( 2 ) );
 
         block = store.getBlock( key3 );
 
-        logger.debug( "For key: %s, retrieved block: %s", key3, block );
+        logger.debug( "For key: {}, retrieved block: {}", key3, block );
         assertThat( block.size(), equalTo( 2 ) );
 
         store.removeBlocks( toRemove );
@@ -309,18 +301,18 @@ public abstract class ExpirationBlockStoreTCK
 
         block = store.getBlock( key );
 
-        logger.debug( "After removal; for key: %s, retrieved block: %s", key, block );
+        logger.debug( "After removal; for key: {}, retrieved block: {}", key, block );
         assertThat( block, nullValue() );
 
         block = store.getBlock( key2 );
 
-        logger.debug( "After removal; for key: %s, retrieved block: %s", key2, block );
+        logger.debug( "After removal; for key: {}, retrieved block: {}", key2, block );
         assertThat( block, notNullValue() );
         assertThat( block.size(), equalTo( 2 ) );
 
         block = store.getBlock( key3 );
 
-        logger.debug( "After removal; for key: %s, retrieved block: %s", key3, block );
+        logger.debug( "After removal; for key: {}, retrieved block: {}", key3, block );
         assertThat( block, nullValue() );
     }
 

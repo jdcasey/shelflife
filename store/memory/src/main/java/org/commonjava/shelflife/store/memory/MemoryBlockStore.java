@@ -27,14 +27,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.commonjava.shelflife.ExpirationManagerException;
 import org.commonjava.shelflife.model.Expiration;
 import org.commonjava.shelflife.store.ExpirationBlockStore;
-import org.commonjava.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @javax.enterprise.context.ApplicationScoped
 public class MemoryBlockStore
     implements ExpirationBlockStore
 {
 
-    private final Logger logger = new Logger( getClass() );
+    private final Logger logger = LoggerFactory.getLogger( getClass() );
 
     private final Map<String, Set<Expiration>> blocks = new ConcurrentHashMap<>();
 
@@ -44,7 +45,7 @@ public class MemoryBlockStore
     {
         for ( final String key : currentKeys )
         {
-            logger.debug( "Removing block: %s", key );
+            logger.debug( "Removing block: {}", key );
             blocks.remove( key );
         }
     }
@@ -55,7 +56,7 @@ public class MemoryBlockStore
     {
         for ( final String key : currentKeys )
         {
-            logger.debug( "Removing block: %s", key );
+            logger.debug( "Removing block: {}", key );
             blocks.remove( key );
         }
     }
@@ -64,13 +65,13 @@ public class MemoryBlockStore
     public void removeFromBlock( final String key, final Expiration expiration )
         throws ExpirationManagerException
     {
-        logger.debug( "Retrieving block: %s", key );
+        logger.debug( "Retrieving block: {}", key );
         final Set<Expiration> block = blocks.get( key );
         if ( block != null )
         {
             synchronized ( block )
             {
-                logger.debug( "Removing from block: %s", expiration );
+                logger.debug( "Removing from block: {}", expiration );
                 block.remove( expiration );
             }
         }
@@ -80,7 +81,7 @@ public class MemoryBlockStore
     public void writeBlocks( final Map<String, Set<Expiration>> currentBlocks )
         throws ExpirationManagerException
     {
-        logger.debug( "Writing blocks: %s", currentBlocks );
+        logger.debug( "Writing blocks: {}", currentBlocks );
         blocks.putAll( currentBlocks );
     }
 
@@ -88,7 +89,7 @@ public class MemoryBlockStore
     public void addToBlock( final String key, final Expiration expiration )
         throws ExpirationManagerException
     {
-        logger.debug( "Retrieving block: %s", key );
+        logger.debug( "Retrieving block: {}", key );
         Set<Expiration> block = blocks.get( key );
         if ( block == null )
         {
@@ -98,7 +99,7 @@ public class MemoryBlockStore
 
         synchronized ( block )
         {
-            logger.debug( "Adding to block: %s", expiration );
+            logger.debug( "Adding to block: {}", expiration );
             block.add( expiration );
         }
     }
@@ -108,7 +109,7 @@ public class MemoryBlockStore
         throws ExpirationManagerException
     {
         final Set<Expiration> block = blocks.get( key );
-        logger.debug( "Retrieving block: %s\n\n%s\n\n", key, block );
+        logger.debug( "Retrieving block: {}\n\n{}\n\n", key, block );
         return block == null ? null : new TreeSet<>( block );
     }
 

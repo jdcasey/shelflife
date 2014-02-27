@@ -24,13 +24,14 @@ import javax.enterprise.inject.Alternative;
 
 import org.commonjava.shelflife.ExpirationManager;
 import org.commonjava.shelflife.ExpirationManagerException;
-import org.commonjava.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Alternative
 public class TimerClockSource
     implements ExpirationClockSource
 {
-    private final Logger logger = new Logger( getClass() );
+    private final Logger logger = LoggerFactory.getLogger( getClass() );
 
     private final Timer timer = new Timer( "shelflife-timer@" + hashCode(), false );
 
@@ -57,7 +58,7 @@ public class TimerClockSource
             throw new RuntimeException( "Cannot start with expiration manager: " + manager + ". This clock source is already started!" );
         }
 
-        logger.info( "Starting clock for manager: %s, period: %s", manager, period );
+        logger.info( "Starting clock for manager: {}, period: {}", manager, period );
 
         clock = new Clock( manager );
         timer.schedule( clock, 0, period );
@@ -66,7 +67,7 @@ public class TimerClockSource
     private static final class Clock
         extends TimerTask
     {
-        private final Logger logger = new Logger( getClass() );
+        private final Logger logger = LoggerFactory.getLogger( getClass() );
 
         private final ExpirationManager manager;
 
@@ -78,7 +79,7 @@ public class TimerClockSource
         @Override
         public void run()
         {
-            logger.info( "Clearing expired from: %s", manager );
+            logger.info( "Clearing expired from: {}", manager );
             manager.clearExpired();
         }
     }

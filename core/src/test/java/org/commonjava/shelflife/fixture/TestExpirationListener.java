@@ -23,14 +23,15 @@ import javax.enterprise.event.Observes;
 
 import org.commonjava.shelflife.event.ExpirationEvent;
 import org.commonjava.shelflife.event.ThreadedEventManager.SimpleEventListener;
-import org.commonjava.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @javax.enterprise.context.ApplicationScoped
 public class TestExpirationListener
     implements SimpleEventListener
 {
 
-    private final Logger logger = new Logger( getClass() );
+    private final Logger logger = LoggerFactory.getLogger( getClass() );
 
     private final List<ExpirationEvent> events = new ArrayList<ExpirationEvent>();
 
@@ -38,7 +39,7 @@ public class TestExpirationListener
     {
         synchronized ( events )
         {
-            logger.debug( "Adding event: %s", event );
+            logger.debug( "Adding event: {}", event );
             events.add( event );
             events.notify();
         }
@@ -49,7 +50,7 @@ public class TestExpirationListener
     {
         synchronized ( events )
         {
-            logger.debug( "Adding event: %s", event );
+            logger.debug( "Adding event: {}", event );
             events.add( event );
             events.notify();
         }
@@ -68,11 +69,11 @@ public class TestExpirationListener
         {
             while ( ( events.size() < count ) && ( ( elapsed = System.currentTimeMillis() - start ) < timeout ) )
             {
-                logger.debug( "TICK: %s -> %d events", elapsed, events.size() );
+                logger.debug( "TICK: {} -> {} events", elapsed, events.size() );
                 events.wait( 500 );
             }
 
-            logger.debug( "elapsed: %s (vs %s); event count: %s (vs %s). Either timed out or event count met.",
+            logger.debug( "elapsed: {} (vs {}); event count: {} (vs {}). Either timed out or event count met.",
                           ( System.currentTimeMillis() - start ), timeout, events.size(), count );
 
             if ( !events.isEmpty() )
@@ -82,7 +83,7 @@ public class TestExpirationListener
             }
         }
 
-        logger.debug( "Result: %s", result );
+        logger.debug( "Result: {}", result );
 
         return result;
     }

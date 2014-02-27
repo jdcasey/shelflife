@@ -57,11 +57,6 @@
       </dependency>
       <dependency>
         <groupId>org.commonjava.shelflife</groupId>
-        <artifactId>shelflife-filer</artifactId>
-        <version>0.3-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>org.commonjava.shelflife</groupId>
         <artifactId>shelflife-store-memory</artifactId>
         <version>0.6-SNAPSHOT</version>
       </dependency>
@@ -74,16 +69,11 @@
       <dependency>
         <groupId>org.commonjava.boms</groupId>
         <artifactId>web-commons-bom</artifactId>
-        <version>6</version>
+        <version>8-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       
-      <dependency>
-        <groupId>log4j</groupId>
-        <artifactId>log4j</artifactId>
-        <version>1.2.16</version>
-      </dependency>
       
       <dependency>
         <groupId>org.jboss.weld.se</groupId>
@@ -97,19 +87,10 @@
         <version>4.8.2</version>
         <scope>test</scope>
       </dependency>
-      <dependency>
-        <groupId>org.commonjava.cdi.util</groupId>
-        <artifactId>weft</artifactId>
-        <version>0.6</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
   
   <dependencies>
-    <dependency>
-      <groupId>org.commonjava.util</groupId>
-      <artifactId>logging</artifactId>
-    </dependency>
     
     <dependency>
       <groupId>javax.inject</groupId>
@@ -127,6 +108,14 @@
       <groupId>org.jboss.spec</groupId>
       <artifactId>jboss-javaee-6.0</artifactId>
       <type>pom</type>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
     </dependency>
   </dependencies>
   
