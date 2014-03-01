@@ -293,7 +293,7 @@ public class FlatBlockStore
             }
             catch ( final ExpirationManagerException e )
             {
-                logger.error( "Failed to write cached blocks to disk: {}", e, e.getMessage() );
+                logger.error( String.format( "Failed to write cached blocks to disk: %s", e.getMessage() ), e );
             }
         }
 

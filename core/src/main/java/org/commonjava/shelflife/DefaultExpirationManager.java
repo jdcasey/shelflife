@@ -460,7 +460,7 @@ public class DefaultExpirationManager
         }
         catch ( final ExpirationManagerException e )
         {
-            logger.error( "Failed to load expirations from: {}. Reason: {}", e, key, e.getMessage() );
+            logger.error( String.format( "Failed to load expirations from: %s. Reason: %s", key, e.getMessage() ), e );
         }
     }
 
@@ -509,7 +509,7 @@ public class DefaultExpirationManager
                     }
                     catch ( final ExpirationManagerException e )
                     {
-                        logger.error( "Failed to trigger expiration: {}. Reason: {}", e, key, e.getMessage() );
+                        logger.error( String.format( "Failed to trigger expiration: %s. Reason: %s", key, e.getMessage() ), e );
 
                         cancel = true;
                     }
@@ -525,7 +525,7 @@ public class DefaultExpirationManager
                 }
                 catch ( final ExpirationManagerException e )
                 {
-                    logger.error( "Failed to cancel expiration: {}. Reason: {}", e, key, e.getMessage() );
+                    logger.error( String.format( "Failed to cancel expiration: %s. Reason: %s", key, e.getMessage() ), e );
                 }
             }
 
@@ -538,7 +538,7 @@ public class DefaultExpirationManager
                 }
                 catch ( final ExpirationManagerException e )
                 {
-                    logger.error( "Failed to remove expiration: {}. Reason: {}", e, key, e.getMessage() );
+                    logger.error( String.format( "Failed to remove expiration: %s. Reason: %s", key, e.getMessage() ), e );
                 }
             }
         }
