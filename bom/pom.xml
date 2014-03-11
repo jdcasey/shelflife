@@ -140,7 +140,7 @@
 
   <profiles>
     <profile>
-      <id>shelflife-release</id>
+      <id>release</id>
       <build>
         <plugins>
           <plugin>
