@@ -23,7 +23,6 @@ import static org.commonjava.shelflife.util.BlockKeyUtils.generateBlockKey;
 import static org.commonjava.shelflife.util.BlockKeyUtils.generateCurrentBlockKey;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -102,8 +101,19 @@ public class DefaultExpirationManager
     public void saveCurrentBlocks()
         throws ExpirationManagerException
     {
+        Set<Expiration> potential;
+        synchronized ( expirations )
+        {
+            if ( expirations == null || expirations.isEmpty() )
+            {
+                return;
+            }
+
+            potential = new TreeSet<Expiration>( expirations );
+        }
+
         final Map<String, Set<Expiration>> currentBlocks = new HashMap<String, Set<Expiration>>();
-        for ( final Expiration expiration : new TreeSet<>( expirations ) )
+        for ( final Expiration expiration : potential )
         {
             final String key = generateBlockKey( expiration.getExpires() );
             Set<Expiration> block = currentBlocks.get( key );
@@ -128,19 +138,38 @@ public class DefaultExpirationManager
             return;
         }
 
-        final long expires = expiration.getExpires();
-        if ( expires < System.currentTimeMillis() )
+        boolean addToCurrent = false;
+        synchronized ( expiration )
         {
-            logger.debug( "IMMEDIATELY triggering: {}", expiration );
+            final long expires = expiration.getExpires();
+            if ( expires < System.currentTimeMillis() )
+            {
+                logger.debug( "IMMEDIATELY triggering: {}", expiration );
+                fire( expiration, SCHEDULE );
+                trigger( expiration );
+                return;
+            }
+
+            logger.debug( "Current block keys are: {}", currentKeys );
+
+            final String key = generateBlockKey( expiration.getExpires() );
+            if ( currentKeys.contains( key ) )
+            {
+                addToCurrent = true;
+            }
+            else
+            {
+                logger.debug( "Adding {} to future expirations block: {}.", expiration, key );
+                store.addToBlock( key, expiration );
+            }
+
+            expiration.schedule();
+
+            //        logger.info( "[SCHEDULED] {}, expires: {}", expiration.getKey(), new Date( expiration.getExpires() ) );
             fire( expiration, SCHEDULE );
-            trigger( expiration );
-            return;
         }
 
-        logger.debug( "Current block keys are: {}", currentKeys );
-
-        final String key = generateBlockKey( expiration.getExpires() );
-        if ( currentKeys.contains( key ) )
+        if ( addToCurrent )
         {
             logger.debug( "Adding {} to current expirations block in memory.", expiration );
             synchronized ( expirations )
@@ -148,16 +177,6 @@ public class DefaultExpirationManager
                 expirations.add( expiration );
             }
         }
-        else
-        {
-            logger.debug( "Adding {} to future expirations block: {}.", expiration, key );
-            store.addToBlock( key, expiration );
-        }
-
-        expiration.schedule();
-
-        //        logger.info( "[SCHEDULED] {}, expires: {}", expiration.getKey(), new Date( expiration.getExpires() ) );
-        fire( expiration, SCHEDULE );
     }
 
     private void fire( final Expiration expiration, final ExpirationEventType type )
@@ -170,12 +189,15 @@ public class DefaultExpirationManager
     public void cancel( final Expiration expiration )
         throws ExpirationManagerException
     {
-        if ( expiration.isActive() && expirations.contains( expiration ) )
+        synchronized ( expiration )
         {
-            expiration.cancel();
-            remove( expiration );
-            logger.info( "[CANCELED] {}", expiration.getKey(), new Date( expiration.getExpires() ) );
-            fire( expiration, CANCEL );
+            if ( expiration.isActive() && expirations.contains( expiration ) )
+            {
+                expiration.cancel();
+                remove( expiration );
+                logger.info( "[CANCELED] {}", expiration.getKey(), new Date( expiration.getExpires() ) );
+                fire( expiration, CANCEL );
+            }
         }
     }
 
@@ -184,13 +206,21 @@ public class DefaultExpirationManager
         throws ExpirationManagerException
     {
         Expiration expiration = null;
-        for ( final Expiration e : new TreeSet<Expiration>( expirations ) )
+        synchronized ( expirations )
         {
-            if ( e.getKey()
-                  .equals( key ) )
+            if ( expirations == null || expirations.isEmpty() )
             {
-                expiration = e;
-                break;
+                return;
+            }
+
+            for ( final Expiration e : new TreeSet<Expiration>( expirations ) )
+            {
+                if ( e.getKey()
+                      .equals( key ) )
+                {
+                    expiration = e;
+                    break;
+                }
             }
         }
 
@@ -205,13 +235,21 @@ public class DefaultExpirationManager
         throws ExpirationManagerException
     {
         Expiration expiration = null;
-        for ( final Expiration e : new TreeSet<Expiration>( expirations ) )
+        synchronized ( expirations )
         {
-            if ( e.getKey()
-                  .equals( key ) )
+            if ( expirations == null || expirations.isEmpty() )
             {
-                expiration = e;
-                break;
+                return;
+            }
+
+            for ( final Expiration e : new TreeSet<Expiration>( expirations ) )
+            {
+                if ( e.getKey()
+                      .equals( key ) )
+                {
+                    expiration = e;
+                    break;
+                }
             }
         }
 
@@ -242,11 +280,20 @@ public class DefaultExpirationManager
     public void triggerAll()
         throws ExpirationManagerException
     {
-        logger.info( "Triggering all {} expirations:\n\n{}", expirations.size(), new TreeSet<Expiration>( expirations ) );
-        for ( final Expiration exp : new TreeSet<Expiration>( expirations ) )
+        synchronized ( expirations )
         {
-            trigger( exp );
+            if ( expirations == null || expirations.isEmpty() )
+            {
+                return;
+            }
+
+            logger.info( "Triggering all {} expirations:\n\n{}", expirations.size(), expirations );
+            for ( final Expiration exp : new TreeSet<Expiration>( expirations ) )
+            {
+                trigger( exp );
+            }
         }
+
     }
 
     @Override
@@ -266,10 +313,19 @@ public class DefaultExpirationManager
     public void cancelAll()
         throws ExpirationManagerException
     {
-        for ( final Expiration exp : new TreeSet<Expiration>( expirations ) )
+        synchronized ( expirations )
         {
-            cancel( exp );
+            if ( expirations == null || expirations.isEmpty() )
+            {
+                return;
+            }
+
+            for ( final Expiration exp : new TreeSet<Expiration>( expirations ) )
+            {
+                cancel( exp );
+            }
         }
+
     }
 
     @Override
@@ -294,11 +350,19 @@ public class DefaultExpirationManager
     @Override
     public boolean hasExpiration( final ExpirationKey key )
     {
-        for ( final Expiration e : new TreeSet<Expiration>( expirations ) )
+        synchronized ( expirations )
         {
-            if ( key.equals( e.getKey() ) )
+            if ( expirations == null || expirations.isEmpty() )
             {
-                return true;
+                return false;
+            }
+
+            for ( final Expiration e : new TreeSet<Expiration>( expirations ) )
+            {
+                if ( key.equals( e.getKey() ) )
+                {
+                    return true;
+                }
             }
         }
 
@@ -367,17 +431,20 @@ public class DefaultExpirationManager
     // FIXME: This only searches the currently loaded blocks.
     protected Set<Expiration> getMatching( final ExpirationMatcher matcher )
     {
-        if ( expirations == null || expirations.isEmpty() )
-        {
-            return Collections.emptySet();
-        }
-
         final Set<Expiration> matching = new TreeSet<Expiration>();
-        for ( final Expiration exp : new TreeSet<>( expirations ) )
+        synchronized ( expirations )
         {
-            if ( matcher.matches( exp ) )
+            if ( expirations == null || expirations.isEmpty() )
             {
-                matching.add( exp );
+                return matching;
+            }
+
+            for ( final Expiration exp : new TreeSet<Expiration>( expirations ) )
+            {
+                if ( matcher.matches( exp ) )
+                {
+                    matching.add( exp );
+                }
             }
         }
 
@@ -436,9 +503,9 @@ public class DefaultExpirationManager
             if ( expirations != null )
             {
                 int added = 0;
-                synchronized ( expirations )
+                synchronized ( this.expirations )
                 {
-                    for ( final Expiration expiration : expirations )
+                    for ( final Expiration expiration : new TreeSet<Expiration>( expirations ) )
                     {
                         if ( expiration != null && this.expirations.add( expiration ) )
                         {
@@ -467,12 +534,16 @@ public class DefaultExpirationManager
     // TODO: Split expirations up into blocks and parallelize the purge.
     protected void purgeExpired()
     {
-        if ( expirations == null || expirations.isEmpty() )
+        final Set<Expiration> current;
+        synchronized ( expirations )
         {
-            return;
-        }
+            if ( expirations == null || expirations.isEmpty() )
+            {
+                return;
+            }
 
-        final Set<Expiration> current = new TreeSet<Expiration>( expirations );
+            current = new TreeSet<Expiration>( expirations );
+        }
 
         logger.info( "Checking {} expirations", current.size() );
         for ( final Expiration exp : current )
@@ -552,7 +623,13 @@ public class DefaultExpirationManager
             return;
         }
 
-        if ( expirations.remove( expiration ) )
+        boolean removed = false;
+        synchronized ( expirations )
+        {
+            removed = expirations.remove( expiration );
+        }
+
+        if ( removed )
         {
             final String key = generateBlockKey( expiration.getExpires() );
             store.removeFromBlock( key, expiration );
