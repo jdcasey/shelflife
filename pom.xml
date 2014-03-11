@@ -130,7 +130,7 @@
             <autoVersionSubmodules>true</autoVersionSubmodules>
             <mavenExecutorId>forked-path</mavenExecutorId>
             <useReleaseProfile>false</useReleaseProfile>
-            <arguments>-Psonatype-oss-release,shelflife-release</arguments>
+            <arguments>-Prelease,shelflife-release</arguments>
           </configuration>
         </plugin>
         <!-- <plugin>
