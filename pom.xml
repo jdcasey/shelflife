@@ -191,4 +191,12 @@
     <module>tck</module>
     <module>bom</module>
   </modules>
+  <profiles>
+    <profile>
+      <id>shelflife-release</id>
+      <properties>
+        <maven.test.skip>true</maven.test.skip>
+      </properties>
+    </profile>
+  </profiles>
 </project>
