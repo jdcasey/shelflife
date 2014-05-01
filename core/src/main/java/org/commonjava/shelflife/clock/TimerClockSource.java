@@ -73,7 +73,7 @@ public class TimerClockSource
         @Override
         public void run()
         {
-            logger.info( "Clearing expired from: {}", manager );
+            logger.debug( "Clearing expired from: {}", manager );
             manager.clearExpired();
         }
     }

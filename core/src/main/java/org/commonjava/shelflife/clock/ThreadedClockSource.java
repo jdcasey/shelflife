@@ -95,7 +95,7 @@ public class ThreadedClockSource
         @Override
         protected void doExecute()
         {
-            logger.info( "Clearing expired from: {}", manager );
+            logger.debug( "Clearing expired from: {}", manager );
             manager.clearExpired();
         }
     }

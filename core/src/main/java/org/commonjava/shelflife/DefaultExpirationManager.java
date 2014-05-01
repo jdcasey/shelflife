@@ -189,7 +189,7 @@ public class DefaultExpirationManager
             {
                 expiration.cancel();
                 remove( expiration );
-                logger.info( "[CANCELED] {}", expiration.getKey(), new Date( expiration.getExpires() ) );
+                //                logger.info( "[CANCELED] {}", expiration.getKey(), new Date( expiration.getExpires() ) );
                 fire( expiration, CANCEL );
             }
         }
@@ -257,14 +257,14 @@ public class DefaultExpirationManager
     public void trigger( final Expiration expiration )
         throws ExpirationManagerException
     {
-        logger.info( "Attempting to trigger: {}", expiration.getKey() );
+        logger.debug( "Attempting to trigger: {}", expiration.getKey() );
         synchronized ( expiration )
         {
             if ( expiration.isActive() && expirations.contains( expiration ) )
             {
                 expiration.expire();
                 remove( expiration );
-                logger.info( "[TRIGGERED] {} at: {}", expiration.getKey(), new Date( expiration.getExpires() ) );
+                logger.debug( "[TRIGGERED] {} at: {}", expiration.getKey(), new Date( expiration.getExpires() ) );
                 fire( expiration, EXPIRE );
             }
         }
@@ -281,7 +281,7 @@ public class DefaultExpirationManager
                 return;
             }
 
-            logger.info( "Triggering all {} expirations:\n\n{}", expirations.size(), expirations );
+            logger.debug( "Triggering all {} expirations:\n\n{}", expirations.size(), expirations );
             for ( final Expiration exp : new TreeSet<Expiration>( expirations ) )
             {
                 trigger( exp );
@@ -468,7 +468,7 @@ public class DefaultExpirationManager
             keys = keys.subList( 0, idx + 1 );
         }
 
-        logger.info( "Loading expiration blocks: {}", keys );
+        logger.debug( "Loading expiration blocks: {}", keys );
 
         for ( final String key : keys )
         {
@@ -539,7 +539,7 @@ public class DefaultExpirationManager
             current = new TreeSet<Expiration>( expirations );
         }
 
-        logger.info( "Checking {} expirations", current.size() );
+        logger.debug( "Checking {} expirations", current.size() );
         for ( final Expiration exp : current )
         {
             if ( exp == null )
@@ -553,7 +553,7 @@ public class DefaultExpirationManager
             boolean cancel = false;
             if ( !exp.isActive() )
             {
-                logger.info( "Expiration no longer active: {}", exp );
+                logger.debug( "Expiration no longer active: {}", exp );
                 cancel = true;
             }
 
@@ -562,13 +562,15 @@ public class DefaultExpirationManager
             {
                 expired = exp.getExpires() <= System.currentTimeMillis();
 
-                logger.info( "Checking expiration: {} vs current time: {}. Expired? {}", exp.getExpires(), System.currentTimeMillis(), expired );
+                logger.debug( "Checking expiration: {} vs current time: {}. Expired? {}", exp.getExpires(),
+                              System.currentTimeMillis(), expired );
 
                 if ( expired )
                 {
                     try
                     {
-                        logger.info( "\n\n\n [{}] TRIGGERING: {} (expiration timeout: {})\n\n\n", System.currentTimeMillis(), exp, exp.getExpires() );
+                        logger.debug( "\n\n\n [{}] TRIGGERING: {} (expiration timeout: {})\n\n\n",
+                                      System.currentTimeMillis(), exp, exp.getExpires() );
 
                         trigger( exp );
                     }
@@ -583,7 +585,7 @@ public class DefaultExpirationManager
 
             if ( cancel )
             {
-                logger.info( "Canceling: {}", key );
+                logger.debug( "Canceling: {}", key );
                 try
                 {
                     cancel( exp );
@@ -596,7 +598,7 @@ public class DefaultExpirationManager
 
             if ( cancel || expired )
             {
-                logger.info( "Removing handled expiration: {}", key );
+                logger.debug( "Removing handled expiration: {}", key );
                 try
                 {
                     remove( exp );
