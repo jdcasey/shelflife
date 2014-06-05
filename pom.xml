@@ -20,7 +20,7 @@
   
   <groupId>org.commonjava.shelflife</groupId>
   <artifactId>shelflife</artifactId>
-  <version>0.6.3-SNAPSHOT</version>
+  <version>0.6.3</version>
   <packaging>pom</packaging>
 
   <name>Shelf-Life Expiration Manager</name>
@@ -29,6 +29,7 @@
     <connection>scm:git:http://jdcasey@github.com/jdcasey/shelflife.git</connection>
     <developerConnection>scm:git:git@github.com:jdcasey/shelflife.git</developerConnection>
     <url>http://github.com/jdcasey/shelflife</url>
+    <tag>shelflife-0.6.3</tag>
   </scm>
 
   <dependencyManagement>
@@ -36,28 +37,28 @@
       <dependency>
         <groupId>org.commonjava.shelflife</groupId>
         <artifactId>shelflife-api</artifactId>
-        <version>0.6.3-SNAPSHOT</version>
+        <version>0.6.3</version>
       </dependency>
       <dependency>
         <groupId>org.commonjava.shelflife</groupId>
         <artifactId>shelflife-core</artifactId>
-        <version>0.6.3-SNAPSHOT</version>
+        <version>0.6.3</version>
       </dependency>
       <dependency>
         <groupId>org.commonjava.shelflife</groupId>
         <artifactId>shelflife-tck-store</artifactId>
-        <version>0.6.3-SNAPSHOT</version>
+        <version>0.6.3</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.commonjava.shelflife</groupId>
         <artifactId>shelflife-store-memory</artifactId>
-        <version>0.6.3-SNAPSHOT</version>
+        <version>0.6.3</version>
       </dependency>
       <dependency>
         <groupId>org.commonjava.shelflife</groupId>
         <artifactId>shelflife-store-flat</artifactId>
-        <version>0.6.3-SNAPSHOT</version>
+        <version>0.6.3</version>
       </dependency>
       
       <dependency>
