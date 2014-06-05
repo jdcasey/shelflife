@@ -14,7 +14,7 @@
   <parent>
     <groupId>org.commonjava.shelflife</groupId>
     <artifactId>shelflife-stores</artifactId>
-    <version>0.6.3</version>
+    <version>0.6.4-SNAPSHOT</version>
   </parent>
 
   <artifactId>shelflife-store-flat</artifactId>
